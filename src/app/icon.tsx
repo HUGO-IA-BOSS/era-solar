@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 
-export const size = { width: 32, height: 32 };
+export const size = { width: 64, height: 64 };
 export const contentType = 'image/png';
 
 export default function Icon() {
@@ -8,20 +8,40 @@ export default function Icon() {
     (
       <div
         style={{
-          width: 32,
-          height: 32,
+          width: 64,
+          height: 64,
           borderRadius: '50%',
-          background: '#f59e0b',
+          background: 'linear-gradient(135deg, #fbbf24, #f97316)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#fff',
-          fontSize: 12,
-          fontWeight: 800,
-          letterSpacing: '-0.5px',
+          boxShadow: 'inset 0 -3px 8px rgba(0,0,0,0.2)',
         }}
       >
-        ES
+        {/* Anillo interior */}
+        <div
+          style={{
+            position: 'absolute',
+            width: 56,
+            height: 56,
+            borderRadius: '50%',
+            border: '2px solid rgba(255,255,255,0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        />
+        <span
+          style={{
+            color: '#fff',
+            fontSize: 22,
+            fontWeight: 900,
+            letterSpacing: '-1px',
+            textShadow: '0 1px 3px rgba(0,0,0,0.25)',
+          }}
+        >
+          ES
+        </span>
       </div>
     ),
     { ...size }
