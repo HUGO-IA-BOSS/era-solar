@@ -41,9 +41,9 @@ export default function Icon() {
         {/* Texto */}
         <span style={{
           color: '#0f172a',
-          fontSize: 30,
+          fontSize: 42,
           fontWeight: 900,
-          letterSpacing: -2,
+          letterSpacing: -3,
           position: 'relative',
           zIndex: 1,
         }}>
