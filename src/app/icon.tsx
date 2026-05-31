@@ -10,36 +10,43 @@ export default function Icon() {
         style={{
           width: 64,
           height: 64,
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, #fbbf24, #f97316)',
+          borderRadius: 10,
+          background: 'linear-gradient(150deg, #fbbf24 0%, #f97316 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: 'inset 0 -3px 8px rgba(0,0,0,0.2)',
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
-        {/* Anillo interior */}
-        <div
-          style={{
-            position: 'absolute',
-            width: 56,
-            height: 56,
-            borderRadius: '50%',
-            border: '2px solid rgba(255,255,255,0.25)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        />
-        <span
-          style={{
-            color: '#fff',
-            fontSize: 22,
-            fontWeight: 900,
-            letterSpacing: '-1px',
-            textShadow: '0 1px 3px rgba(0,0,0,0.25)',
-          }}
-        >
+        {/* Reflejo diagonal superior */}
+        <div style={{
+          position: 'absolute',
+          top: -10,
+          left: -10,
+          width: 48,
+          height: 48,
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.15)',
+        }} />
+        {/* Franja oscura inferior */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 18,
+          background: 'rgba(0,0,0,0.12)',
+        }} />
+        {/* Texto */}
+        <span style={{
+          color: '#0f172a',
+          fontSize: 30,
+          fontWeight: 900,
+          letterSpacing: -2,
+          position: 'relative',
+          zIndex: 1,
+        }}>
           ES
         </span>
       </div>
