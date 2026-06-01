@@ -296,7 +296,7 @@ export default function Home() {
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:24 }}>
             {[
               {
-                img:'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=700&q=80',
+                img:'https://images.unsplash.com/photo-1611365892117-00ac5ef43c90?w=700&q=80',
                 title:'Residencial',
                 desc:'Paneles para tu hogar. Reduce tu boleta desde el primer mes con sistemas diseñados para casas y departamentos.',
               },
