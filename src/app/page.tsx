@@ -297,17 +297,17 @@ export default function Home() {
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:24 }}>
             {[
               {
-                img:'https://images.unsplash.com/photo-1548337138-e87d889cc369?w=700&q=80',
+                img:'https://images.unsplash.com/photo-1559302504-64aae6ca6890?w=700&q=80',
                 title:'Residencial',
                 desc:'Paneles para tu hogar. Reduce tu boleta desde el primer mes con sistemas diseñados para casas y departamentos.',
               },
               {
-                img:'https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=700&q=80',
+                img:'https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=700&q=80',
                 title:'Comercial',
                 desc:'Optimiza los costos energéticos de tu negocio. Soluciones escalables para oficinas, locales y centros comerciales.',
               },
               {
-                img:'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=700&q=80',
+                img:'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=700&q=80',
                 title:'Industrial',
                 desc:'Grandes instalaciones para bodegas, fábricas y proyectos agrícolas. Máximo ahorro a escala industrial.',
               },
@@ -356,7 +356,6 @@ export default function Home() {
               { icon:<Shield size={20} color={AMBER} />,    t:'Garantía de 10 años',                  d:'Instalación garantizada con mantención correctiva gratuita durante el primer año.' },
               { icon:<Smartphone size={20} color={AMBER} />,t:'Monitoreo en tiempo real 24/7',         d:'App que muestra tu generación y ahorro energético en todo momento.' },
               { icon:<Zap size={20} color={AMBER} />,       t:'Instalación en menos de 4 días',        d:'Equipo certificado que ejecuta todo: diseño, instalación y conexión a la red.' },
-              { icon:<Leaf size={20} color={AMBER} />,      t:'Certificado de impacto ambiental',      d:'Acredita las 2,4 ton de CO₂ que dejas de emitir cada año.' },
             ].map(b => (
               <div key={b.t} style={{ display:'flex', gap:16, marginBottom:24 }}>
                 <div style={{
