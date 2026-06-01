@@ -301,12 +301,12 @@ export default function Home() {
                 desc:'Paneles para tu hogar. Reduce tu boleta desde el primer mes con sistemas diseñados para casas y departamentos.',
               },
               {
-                img:'https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=700&q=80',
+                img:'https://images.unsplash.com/photo-1604328698692-f76ea9498e76?w=700&q=80',
                 title:'Comercial',
                 desc:'Optimiza los costos energéticos de tu negocio. Soluciones escalables para oficinas, locales y centros comerciales.',
               },
               {
-                img:'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=700&q=80',
+                img:'https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=700&q=80',
                 title:'Industrial',
                 desc:'Grandes instalaciones para bodegas, fábricas y proyectos agrícolas. Máximo ahorro a escala industrial.',
               },
