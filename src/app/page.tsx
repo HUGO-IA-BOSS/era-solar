@@ -266,14 +266,13 @@ export default function Home() {
       <section style={{ background:AMBER, padding:'44px 48px' }}>
         <div style={{
           maxWidth:1200, margin:'0 auto',
-          display:'grid', gridTemplateColumns:'repeat(4,1fr)',
+          display:'grid', gridTemplateColumns:'repeat(3,1fr)',
           gap:32, textAlign:'center',
         }}>
           {[
             { v:'+1.000', l:'Paneles instalados' },
             { v:'< 4 días', l:'Tiempo de instalación' },
             { v:'10 años', l:'Garantía de paneles' },
-            { v:'2,4 ton', l:'CO₂ evitadas / año' },
           ].map(s => (
             <div key={s.v}>
               <div style={{ fontSize:34, fontWeight:800, color:'#fff' }}>{s.v}</div>
