@@ -1,0 +1,91 @@
+/* Estilos scoped del backoffice (/app). Lo que los estilos inline no cubren:
+   tipografías, hovers, scrollbars, animaciones y responsive. */
+
+.es-app {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.es-app h1,
+.es-app h2,
+.es-app h3 {
+  font-family: var(--font-grotesk), var(--font-inter), sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.es-app * {
+  box-sizing: border-box;
+}
+
+.es-navlink:hover {
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: #f4f4f5 !important;
+}
+
+.es-card-link {
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.es-card-link:hover {
+  transform: translateY(-2px);
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.es-app input:focus,
+.es-app textarea:focus,
+.es-app select:focus {
+  border-color: rgba(245, 158, 11, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+}
+
+.es-btn:hover {
+  filter: brightness(1.06);
+}
+.es-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Scrollbar oscura */
+.es-app ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.es-app ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+}
+.es-app ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes es-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.es-spin {
+  animation: es-spin 0.8s linear infinite;
+}
+
+/* Detalle de proyecto: una columna en pantallas medianas/pequeñas */
+@media (max-width: 900px) {
+  .es-detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Responsive: sidebar colapsable en móvil */
+@media (max-width: 860px) {
+  .es-topbar {
+    display: flex !important;
+  }
+  .es-sidebar {
+    position: fixed !important;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+  }
+  .es-sidebar[data-open="true"] {
+    transform: translateX(0);
+  }
+}
