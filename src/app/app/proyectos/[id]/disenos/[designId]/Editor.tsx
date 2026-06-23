@@ -250,6 +250,8 @@ export default function Editor({
       return;
     }
     if (tool === "panel") {
+      // Clic sobre un panel existente => se selecciona (su onClick) en vez de soltar otro.
+      if (!clickedEmpty) return;
       if (!pxPerMeter) {
         setErr("Primero calibra la escala (herramienta de regla).");
         return;
@@ -264,6 +266,9 @@ export default function Editor({
         fill: panelColor,
       };
       setPanels((arr) => [...arr, np]);
+      // Queda seleccionado para moverlo/girarlo de inmediato.
+      setSelectedId(np.id);
+      setSelectedKind("panel");
       return;
     }
     if (tool === "text") {
@@ -591,7 +596,13 @@ export default function Editor({
             <span style={{ color: theme.textFaint }}>×</span>
             <input type="number" step="0.01" value={tplH} onChange={(e) => setTplH(Number(e.target.value))} style={numInput} />
             <Swatches colors={PANEL_COLORS} value={panelColor} onChange={setPanelColor} />
-            {!pxPerMeter && <span style={{ fontSize: 12, color: theme.accent }}>← calibra primero</span>}
+            {!pxPerMeter ? (
+              <span style={{ fontSize: 12, color: theme.accent }}>← calibra primero</span>
+            ) : (
+              <span style={{ fontSize: 12, color: theme.textFaint }}>
+                Clic en vacío para soltar · clic en un panel para moverlo/girarlo (tirador superior)
+              </span>
+            )}
           </div>
         )}
 
@@ -670,10 +681,10 @@ export default function Editor({
                 key={p.id}
                 shape={p}
                 px={px || 1}
-                draggable={tool === "select"}
+                draggable={tool === "select" || tool === "panel"}
                 isSelected={selectedId === p.id}
                 onSelect={() => {
-                  if (tool === "select") {
+                  if (tool === "select" || tool === "panel") {
                     setSelectedId(p.id);
                     setSelectedKind("panel");
                   }
@@ -735,9 +746,14 @@ export default function Editor({
               ref={trRef}
               rotateEnabled
               keepRatio={false}
+              rotationSnaps={[0, 45, 90, 135, 180, 225, 270, 315]}
+              rotateAnchorOffset={28}
+              anchorSize={10}
+              anchorCornerRadius={2}
               anchorStroke={theme.accent}
               anchorFill="#fff"
               borderStroke={theme.accent}
+              borderStrokeWidth={1.5}
               boundBoxFunc={(oldB, newB) => (newB.width < 6 || newB.height < 6 ? oldB : newB)}
             />
           </Layer>
