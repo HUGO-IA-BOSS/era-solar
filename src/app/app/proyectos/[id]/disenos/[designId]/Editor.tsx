@@ -9,6 +9,8 @@ import {
   MousePointer2,
   Hand,
   Grid2x2,
+  RectangleVertical,
+  RectangleHorizontal,
   Pencil,
   Minus,
   Type,
@@ -42,6 +44,15 @@ const PANEL_COLORS = [
 ];
 const PEN_COLORS = ["#ff3b30", "#f59e0b", "#22c55e", "#3b82f6", "#ffffff", "#111111"];
 
+// Medidas reales aproximadas de paneles comunes (en metros, lado largo × lado corto).
+// Son editables al vuelo; ajusta según el modelo exacto de tu proveedor.
+const PANEL_PRESETS = [
+  { id: "p450", label: "Estándar 450–460W", long: 1.762, short: 1.134 },
+  { id: "p585", label: "585W (≈2.28×1.13)", long: 2.278, short: 1.134 },
+  { id: "p620", label: "620W (≈2.38×1.13)", long: 2.382, short: 1.134 },
+  { id: "p710", label: "710W (≈2.38×1.30)", long: 2.384, short: 1.303 },
+];
+
 const emptyScene = (): Scene => ({
   version: 1,
   pxPerMeter: null,
@@ -74,9 +85,11 @@ export default function Editor({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedKind, setSelectedKind] = useState<"panel" | "text" | null>(null);
 
-  // Opciones de herramienta
-  const [tplW, setTplW] = useState(1.76);
-  const [tplH, setTplH] = useState(1.13);
+  // Opciones de herramienta — plantilla de panel (preset + orientación)
+  const [presetId, setPresetId] = useState("p585");
+  const [orient, setOrient] = useState<"v" | "h">("v"); // vertical / horizontal
+  const [tplW, setTplW] = useState(1.134); // 585W vertical: ancho = lado corto
+  const [tplH, setTplH] = useState(2.278); //               alto  = lado largo
   const [panelColor, setPanelColor] = useState(PANEL_COLORS[0]);
   const [penColor, setPenColor] = useState(PEN_COLORS[0]);
   const [penWidth, setPenWidth] = useState(3);
@@ -206,6 +219,32 @@ export default function Editor({
     else if (selectedKind === "text") setTexts((t) => t.filter((x) => x.id !== selectedId));
     setSelectedId(null);
     setSelectedKind(null);
+  }
+
+  // -------- plantilla de panel: preset + orientación --------
+  function applyPreset(id: string, o: "v" | "h") {
+    const p = PANEL_PRESETS.find((x) => x.id === id);
+    if (!p) return;
+    if (o === "v") {
+      setTplW(p.short);
+      setTplH(p.long);
+    } else {
+      setTplW(p.long);
+      setTplH(p.short);
+    }
+  }
+  function changePreset(id: string) {
+    setPresetId(id);
+    if (id !== "custom") applyPreset(id, orient);
+  }
+  function changeOrient(o: "v" | "h") {
+    setOrient(o);
+    if (presetId !== "custom") applyPreset(presetId, o);
+    else {
+      // en modo personalizado, girar la orientación = intercambiar ancho/alto
+      setTplW(tplH);
+      setTplH(tplW);
+    }
   }
 
   // -------- subir imagen de fondo --------
@@ -591,18 +630,58 @@ export default function Editor({
 
         {tool === "panel" && (
           <div style={optGroup}>
-            <span style={optLabel}>Panel (m):</span>
-            <input type="number" step="0.01" value={tplW} onChange={(e) => setTplW(Number(e.target.value))} style={numInput} />
+            <span style={optLabel}>Panel:</span>
+            <select
+              value={presetId}
+              onChange={(e) => changePreset(e.target.value)}
+              style={{ ...numInput, width: "auto", appearance: "auto" }}
+            >
+              {PANEL_PRESETS.map((p) => (
+                <option key={p.id} value={p.id} style={{ background: theme.surfaceSolid }}>
+                  {p.label}
+                </option>
+              ))}
+              <option value="custom" style={{ background: theme.surfaceSolid }}>
+                Personalizado
+              </option>
+            </select>
+
+            <span style={{ display: "inline-flex", border: `1px solid ${theme.border}`, borderRadius: 8, overflow: "hidden" }}>
+              <button onClick={() => changeOrient("v")} title="Vertical" style={orientBtn(orient === "v")}>
+                <RectangleVertical size={16} />
+              </button>
+              <button onClick={() => changeOrient("h")} title="Horizontal" style={orientBtn(orient === "h")}>
+                <RectangleHorizontal size={16} />
+              </button>
+            </span>
+
+            <input
+              type="number"
+              step="0.001"
+              value={tplW}
+              onChange={(e) => {
+                setTplW(Number(e.target.value));
+                setPresetId("custom");
+              }}
+              style={numInput}
+              title="Ancho (m)"
+            />
             <span style={{ color: theme.textFaint }}>×</span>
-            <input type="number" step="0.01" value={tplH} onChange={(e) => setTplH(Number(e.target.value))} style={numInput} />
+            <input
+              type="number"
+              step="0.001"
+              value={tplH}
+              onChange={(e) => {
+                setTplH(Number(e.target.value));
+                setPresetId("custom");
+              }}
+              style={numInput}
+              title="Alto (m)"
+            />
+            <span style={{ fontSize: 11.5, color: theme.textFaint }}>m</span>
+
             <Swatches colors={PANEL_COLORS} value={panelColor} onChange={setPanelColor} />
-            {!pxPerMeter ? (
-              <span style={{ fontSize: 12, color: theme.accent }}>← calibra primero</span>
-            ) : (
-              <span style={{ fontSize: 12, color: theme.textFaint }}>
-                Clic en vacío para soltar · clic en un panel para moverlo/girarlo (tirador superior)
-              </span>
-            )}
+            {!pxPerMeter && <span style={{ fontSize: 12, color: theme.accent }}>← calibra primero</span>}
           </div>
         )}
 
@@ -973,6 +1052,19 @@ const miniBtn: React.CSSProperties = {
   fontSize: 12,
   cursor: "pointer",
 };
+
+function orientBtn(active: boolean): React.CSSProperties {
+  return {
+    width: 34,
+    height: 32,
+    display: "grid",
+    placeItems: "center",
+    background: active ? theme.accentSoft : "transparent",
+    color: active ? theme.accent : theme.textMuted,
+    border: "none",
+    cursor: "pointer",
+  };
+}
 
 function ToolBtn({
   icon: Icon,
