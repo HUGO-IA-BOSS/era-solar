@@ -48,9 +48,9 @@ const PEN_COLORS = ["#ff3b30", "#f59e0b", "#22c55e", "#3b82f6", "#ffffff", "#111
 // Son editables al vuelo; ajusta según el modelo exacto de tu proveedor.
 const PANEL_PRESETS = [
   { id: "p450", label: "Estándar 450–460W", long: 1.762, short: 1.134 },
-  { id: "p585", label: "585W (≈2.28×1.13)", long: 2.278, short: 1.134 },
+  { id: "p585", label: "585W (2.278×1.134)", long: 2.278, short: 1.134 },
   { id: "p620", label: "620W (≈2.38×1.13)", long: 2.382, short: 1.134 },
-  { id: "p710", label: "710W (≈2.38×1.30)", long: 2.384, short: 1.303 },
+  { id: "p710", label: "710W (2.384×1.303)", long: 2.384, short: 1.303 },
 ];
 
 const emptyScene = (): Scene => ({
