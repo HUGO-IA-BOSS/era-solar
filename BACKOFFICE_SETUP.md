@@ -19,6 +19,8 @@ todo en español. Login con Google restringido por whitelist de correos.
    - Crea tablas (`profiles`, `projects`, `designs`, `attachments`, `allowed_emails`),
      RLS, triggers, los buckets de Storage (`attachments` privado, `designs` público)
      y deja como **admin** a `hirarrazavala@gmail.com` y `matiasira007@gmail.com`.
+4. Luego pega y corre también `supabase/migrations/0002_finanzas.sql` (módulo Finanzas:
+   tablas `sociedades` y `purchases` con su RLS + una sociedad inicial editable).
 
 ## 2. Activar el login con Google
 

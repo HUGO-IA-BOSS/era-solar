@@ -7,6 +7,8 @@ import {
   LayoutDashboard,
   FolderKanban,
   Users,
+  Receipt,
+  Building2,
   LogOut,
   Sun,
   Menu,
@@ -17,10 +19,32 @@ import { ROLE_MAP } from "@/lib/constants";
 import type { Profile } from "@/lib/types";
 import { signOut } from "@/app/auth/actions";
 
-const NAV = [
-  { href: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/app/proyectos", label: "Proyectos", icon: FolderKanban, exact: false },
-  { href: "/app/usuarios", label: "Usuarios", icon: Users, exact: false, adminOnly: true },
+type NavItem = {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+  adminOnly?: boolean;
+};
+
+const SECTIONS: { title?: string; items: NavItem[] }[] = [
+  {
+    items: [
+      { href: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      { href: "/app/proyectos", label: "Proyectos", icon: FolderKanban },
+    ],
+  },
+  {
+    title: "Finanzas",
+    items: [{ href: "/app/compras", label: "Compras", icon: Receipt }],
+  },
+  {
+    title: "Administración",
+    items: [
+      { href: "/app/sociedades", label: "Sociedades", icon: Building2, adminOnly: true },
+      { href: "/app/usuarios", label: "Usuarios", icon: Users, adminOnly: true },
+    ],
+  },
 ];
 
 export default function Shell({
@@ -32,8 +56,6 @@ export default function Shell({
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  const links = NAV.filter((n) => !n.adminOnly || profile.role === "admin");
 
   return (
     <div style={{ display: "flex", minHeight: "100dvh", background: theme.bg, color: theme.text }}>
@@ -78,33 +100,55 @@ export default function Shell({
           </span>
         </Link>
 
-        <nav style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          {links.map((n) => {
-            const active = n.exact ? pathname === n.href : pathname.startsWith(n.href);
-            const Icon = n.icon;
+        <nav style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {SECTIONS.map((section, si) => {
+            const items = section.items.filter((n) => !n.adminOnly || profile.role === "admin");
+            if (items.length === 0) return null;
             return (
-              <Link
-                key={n.href}
-                href={n.href}
-                onClick={() => setMobileOpen(false)}
-                className="es-navlink"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  padding: "10px 12px",
-                  borderRadius: 10,
-                  textDecoration: "none",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: active ? theme.text : theme.textMuted,
-                  background: active ? theme.accentSoft : "transparent",
-                  border: `1px solid ${active ? "rgba(245,158,11,0.25)" : "transparent"}`,
-                }}
-              >
-                <Icon size={18} color={active ? theme.accent : theme.textMuted} />
-                {n.label}
-              </Link>
+              <div key={si} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                {section.title && (
+                  <div
+                    style={{
+                      fontSize: 10.5,
+                      fontWeight: 700,
+                      letterSpacing: 0.6,
+                      textTransform: "uppercase",
+                      color: theme.textFaint,
+                      padding: "4px 12px 2px",
+                    }}
+                  >
+                    {section.title}
+                  </div>
+                )}
+                {items.map((n) => {
+                  const active = n.exact ? pathname === n.href : pathname.startsWith(n.href);
+                  const Icon = n.icon;
+                  return (
+                    <Link
+                      key={n.href}
+                      href={n.href}
+                      onClick={() => setMobileOpen(false)}
+                      className="es-navlink"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: "10px 12px",
+                        borderRadius: 10,
+                        textDecoration: "none",
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: active ? theme.text : theme.textMuted,
+                        background: active ? theme.accentSoft : "transparent",
+                        border: `1px solid ${active ? "rgba(245,158,11,0.25)" : "transparent"}`,
+                      }}
+                    >
+                      <Icon size={18} color={active ? theme.accent : theme.textMuted} />
+                      {n.label}
+                    </Link>
+                  );
+                })}
+              </div>
             );
           })}
         </nav>

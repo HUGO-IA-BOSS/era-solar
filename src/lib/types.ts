@@ -113,3 +113,39 @@ export interface Design {
   created_at: string;
   updated_at: string;
 }
+
+// --- Finanzas ---
+
+export interface Sociedad {
+  id: string;
+  nombre: string;
+  rut: string | null;
+  created_at: string;
+}
+
+export type ImputacionTipo = "proyecto" | "sociedad" | "usuario";
+export type FondoTipo = "sociedad" | "usuario";
+
+export interface Purchase {
+  id: string;
+  fecha_compra: string | null;
+  proveedor: string | null;
+  rut_proveedor: string | null;
+  monto_total: number; // total pagado (IVA incluido si aplica)
+  tiene_iva: boolean;
+  con_factura: boolean;
+  factura_a_sociedad: boolean;
+  folio_factura: string | null;
+  imputacion_tipo: ImputacionTipo;
+  proyecto_id: string | null;
+  uso_user_id: string | null;
+  fondo_tipo: FondoTipo;
+  fondo_user_id: string | null;
+  sociedad_id: string | null;
+  fecha_pago: string | null;
+  descripcion: string | null;
+  foto_path: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}

@@ -52,3 +52,23 @@ export function formatCLP(n: number | null | undefined): string {
 
 export const STORAGE_ATTACHMENTS = "attachments";
 export const STORAGE_DESIGNS = "designs";
+
+// --- Finanzas ---
+
+// A partir del total pagado, separa neto e IVA (crédito) hacia atrás.
+export function desglosaIVA(total: number, tieneIva: boolean): { neto: number; iva: number; total: number } {
+  const t = total || 0;
+  const neto = tieneIva ? Math.round(t / (1 + IVA)) : t;
+  return { neto, iva: t - neto, total: t };
+}
+
+export const IMPUTACION_LABEL: Record<"proyecto" | "sociedad" | "usuario", string> = {
+  proyecto: "Proyecto",
+  sociedad: "Sociedad (admin/operación)",
+  usuario: "Usuario (personal)",
+};
+
+export const FONDO_LABEL: Record<"sociedad" | "usuario", string> = {
+  sociedad: "Sociedad",
+  usuario: "Usuario",
+};
