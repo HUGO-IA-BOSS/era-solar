@@ -5,11 +5,12 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader, Card, SectionTitle, Field, EstadoBadge } from "../../_components/ui";
 import { formatCLP, IVA } from "@/lib/constants";
 import { theme } from "@/lib/theme";
-import type { Project, Design, Attachment } from "@/lib/types";
+import type { Project, Design, Attachment, Cuota, SaleAllocation } from "@/lib/types";
 import EstadoSelector from "./_components/EstadoSelector";
 import DesignsSection from "./_components/DesignsSection";
 import AttachmentsManager from "./_components/AttachmentsManager";
 import ProjectHeaderActions from "./_components/ProjectHeaderActions";
+import CuotasSection from "./_components/CuotasSection";
 
 export const dynamic = "force-dynamic";
 
@@ -20,14 +21,26 @@ export default async function ProyectoDetallePage({ params }: { params: Promise<
   const { data: project } = await supabase.from("projects").select("*").eq("id", id).single<Project>();
   if (!project) notFound();
 
-  const [{ data: designsData }, { data: attachmentsData }] = await Promise.all([
-    supabase.from("designs").select("*").eq("project_id", id).order("updated_at", { ascending: false }),
-    supabase.from("attachments").select("*").eq("project_id", id).order("created_at", { ascending: false }),
-  ]);
+  const [{ data: designsData }, { data: attachmentsData }, { data: cuotasData }, { data: usersData }, { data: sociedadesData }] =
+    await Promise.all([
+      supabase.from("designs").select("*").eq("project_id", id).order("updated_at", { ascending: false }),
+      supabase.from("attachments").select("*").eq("project_id", id).order("created_at", { ascending: false }),
+      supabase.from("cuotas").select("*").eq("project_id", id).order("orden"),
+      supabase.from("profiles").select("id, full_name, email").neq("role", "pendiente").order("full_name"),
+      supabase.from("sociedades").select("id").limit(1),
+    ]);
 
   const designs = (designsData ?? []) as Design[];
   const attachments = (attachmentsData ?? []) as Attachment[];
+  const cuotas = (cuotasData ?? []) as Cuota[];
   const designThumbUrl = designs.find((d) => d.thumbnail_url)?.thumbnail_url ?? null;
+
+  // Abonos de las cuotas de este proyecto (para estado pendiente/parcial/pagada).
+  const cuotaIds = cuotas.map((c) => c.id);
+  const { data: allocData } = cuotaIds.length
+    ? await supabase.from("sale_allocations").select("*").in("cuota_id", cuotaIds)
+    : { data: [] as SaleAllocation[] };
+  const allocations = (allocData ?? []) as SaleAllocation[];
 
   const neto = project.valor_neto;
   const conIva = neto != null ? Math.round(neto * (1 + IVA)) : null;
@@ -87,6 +100,19 @@ export default async function ProyectoDetallePage({ params }: { params: Promise<
           <Card>
             <SectionTitle>Diseños</SectionTitle>
             <DesignsSection projectId={id} designs={designs} />
+          </Card>
+
+          <Card>
+            <SectionTitle>Cuotas / Plan de pago</SectionTitle>
+            <CuotasSection
+              projectId={id}
+              projectNombre={project.nombre}
+              valorNeto={project.valor_neto}
+              cuotas={cuotas}
+              allocations={allocations}
+              users={usersData ?? []}
+              sociedadId={sociedadesData?.[0]?.id ?? null}
+            />
           </Card>
 
           <Card>

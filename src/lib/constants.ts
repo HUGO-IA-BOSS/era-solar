@@ -1,4 +1,4 @@
-import type { EstadoProyecto, TipoAdjunto, Role } from "./types";
+import type { EstadoProyecto, TipoAdjunto, Role, MedioPago } from "./types";
 
 export const IVA = 0.19;
 
@@ -72,3 +72,16 @@ export const FONDO_LABEL: Record<"sociedad" | "usuario", string> = {
   sociedad: "Sociedad",
   usuario: "Usuario",
 };
+
+export const MEDIO_PAGO_OPTIONS: { value: MedioPago; label: string }[] = [
+  { value: "transferencia", label: "Transferencia" },
+  { value: "efectivo", label: "Efectivo" },
+  { value: "cheque", label: "Cheque" },
+  { value: "tarjeta", label: "Tarjeta" },
+  { value: "deposito", label: "Depósito" },
+  { value: "otro", label: "Otro" },
+];
+
+export const MEDIO_PAGO_LABEL: Record<MedioPago, string> = Object.fromEntries(
+  MEDIO_PAGO_OPTIONS.map((m) => [m.value, m.label])
+) as Record<MedioPago, string>;

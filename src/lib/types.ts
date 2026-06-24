@@ -125,6 +125,45 @@ export interface Sociedad {
 
 export type ImputacionTipo = "proyecto" | "sociedad" | "usuario";
 export type FondoTipo = "sociedad" | "usuario";
+export type MedioPago = "transferencia" | "efectivo" | "cheque" | "tarjeta" | "deposito" | "otro";
+
+export interface Cuota {
+  id: string;
+  project_id: string;
+  nombre: string;
+  monto: number;
+  fecha_vencimiento: string | null;
+  orden: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Sale {
+  id: string;
+  proyecto_id: string | null;
+  monto_total: number; // total recibido (IVA incluido si aplica)
+  tiene_iva: boolean;
+  medio_pago: MedioPago;
+  fecha_pago: string | null;
+  destino_tipo: FondoTipo; // sociedad | usuario (a dónde van los fondos)
+  destino_user_id: string | null;
+  sociedad_id: string | null;
+  folio_factura: string | null;
+  factura_path: string | null;
+  comprobante_path: string | null;
+  descripcion: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SaleAllocation {
+  id: string;
+  sale_id: string;
+  cuota_id: string;
+  monto: number;
+  created_at: string;
+}
 
 export interface Purchase {
   id: string;

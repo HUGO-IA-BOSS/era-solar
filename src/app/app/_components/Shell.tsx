@@ -8,6 +8,7 @@ import {
   FolderKanban,
   Users,
   Receipt,
+  Banknote,
   Building2,
   LogOut,
   Sun,
@@ -36,7 +37,10 @@ const SECTIONS: { title?: string; items: NavItem[] }[] = [
   },
   {
     title: "Finanzas",
-    items: [{ href: "/app/compras", label: "Compras", icon: Receipt }],
+    items: [
+      { href: "/app/compras", label: "Compras", icon: Receipt },
+      { href: "/app/ventas", label: "Ventas", icon: Banknote },
+    ],
   },
   {
     title: "Administración",
