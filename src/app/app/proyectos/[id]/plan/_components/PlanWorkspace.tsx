@@ -61,7 +61,6 @@ export default function PlanWorkspace({
   const [openChecklist, setOpenChecklist] = useState<Set<string>>(new Set());
   const [editor, setEditor] = useState<Editor>(null);
   const [planModal, setPlanModal] = useState<"generar" | "regenerar" | null>(null);
-  const [planError, setPlanError] = useState<string | null>(null);
 
   const userMap = useMemo(() => new Map(users.map((u) => [u.id, u.full_name || u.email])), [users]);
   const bloqueoLabel = (t: Task) => {
@@ -150,29 +149,15 @@ export default function PlanWorkspace({
   const orphan = tasksByStage.get("__none__") ?? [];
   const working = busy || pending;
 
-  const confirmPlan = (fechas: string[]) => {
-    setPlanError(null);
+  const confirmPlan = (fechas: string[]) =>
     start(async () => {
-      const res = planModal === "regenerar" ? await regenerarPlan(projectId, fechas) : await generarPlan(projectId, fechas);
-      if (res?.error) {
-        setPlanError(res.error);
-        return;
-      }
+      if (planModal === "generar") await generarPlan(projectId, fechas);
+      else if (planModal === "regenerar") await regenerarPlan(projectId, fechas);
       setPlanModal(null);
       router.refresh();
     });
-  };
   const planModalEl = planModal ? (
-    <GenerarPlanModal
-      mode={planModal}
-      working={working}
-      error={planError}
-      onClose={() => {
-        setPlanModal(null);
-        setPlanError(null);
-      }}
-      onConfirm={confirmPlan}
-    />
+    <GenerarPlanModal mode={planModal} working={working} onClose={() => setPlanModal(null)} onConfirm={confirmPlan} />
   ) : null;
 
   // ---- Estado vacío ----

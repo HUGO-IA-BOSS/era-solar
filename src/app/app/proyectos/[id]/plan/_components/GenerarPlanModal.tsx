@@ -17,13 +17,11 @@ function defaultFechas(): string[] {
 export default function GenerarPlanModal({
   mode,
   working,
-  error,
   onConfirm,
   onClose,
 }: {
   mode: "generar" | "regenerar";
   working: boolean;
-  error?: string | null;
   onConfirm: (fechas: string[]) => void;
   onClose: () => void;
 }) {
@@ -56,16 +54,6 @@ export default function GenerarPlanModal({
           </div>
         ))}
       </div>
-      {error && (
-        <div style={{ marginTop: 14, color: "#fca5a5", fontSize: 13, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "10px 12px" }}>
-          {error}
-          {/column .* does not exist|no existe la columna/i.test(error) && (
-            <div style={{ marginTop: 6, color: theme.textMuted }}>
-              Parece que falta correr la migración <strong>0005_plan_deps.sql</strong> en Supabase.
-            </div>
-          )}
-        </div>
-      )}
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 20 }}>
         <button onClick={onClose} style={{ background: "transparent", border: `1px solid ${theme.border}`, color: theme.textMuted, borderRadius: 10, padding: "10px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
           Cancelar
