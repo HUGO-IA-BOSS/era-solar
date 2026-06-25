@@ -11,6 +11,7 @@ import {
   Receipt,
   Banknote,
   Building2,
+  ClipboardList,
   LogOut,
   Sun,
   Menu,
@@ -47,6 +48,7 @@ const SECTIONS: { title?: string; items: NavItem[] }[] = [
   {
     title: "Administración",
     items: [
+      { href: "/app/plantilla", label: "Plantilla de plan", icon: ClipboardList, adminOnly: true },
       { href: "/app/sociedades", label: "Sociedades", icon: Building2, adminOnly: true },
       { href: "/app/usuarios", label: "Usuarios", icon: Users, adminOnly: true },
     ],

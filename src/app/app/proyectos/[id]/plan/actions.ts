@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { DEFAULT_PLAN } from "@/lib/plan-template";
+import { defaultStoredTemplate, type StoredStage } from "@/lib/plan-template";
 
 type DB = Awaited<ReturnType<typeof createClient>>;
 
@@ -15,22 +15,24 @@ function dayDiff(a: string, b: string): number {
   return Math.round((Date.parse(b + "T00:00:00Z") - Date.parse(a + "T00:00:00Z")) / 86400000);
 }
 
-// Inserta etapas/tareas/checklist desde la plantilla, resolviendo dependencias
-// (bloqueadaPor / dependeDe) y, si llegan fechas de inicio por etapa, inventa
-// las fechas de etapas y tareas para poblar el Gantt.
-async function seedPlan(supabase: DB, projectId: string, fechas?: (string | null)[]) {
-  const stageIdByName = new Map<string, string>();
-  const taskIdByTitulo = new Map<string, string>();
+async function getTemplate(supabase: DB): Promise<StoredStage[]> {
+  const { data } = await supabase.from("plan_template").select("data").eq("id", 1).maybeSingle();
+  const stored = data?.data as StoredStage[] | undefined;
+  return stored && stored.length ? stored : defaultStoredTemplate();
+}
 
-  for (let si = 0; si < DEFAULT_PLAN.length; si++) {
-    const st = DEFAULT_PLAN[si];
-    const stageDep = st.bloqueadaPor ? stageIdByName.get(st.bloqueadaPor) ?? null : null;
-
-    const start = fechas?.[si] || null;
+// Crea etapas/tareas/checklist desde la plantilla (claves estables), resolviendo
+// dependencias de etapa y tarea, e inventando fechas si llegan fechas de inicio por etapa.
+async function seedPlan(supabase: DB, projectId: string, template: StoredStage[], fechas?: (string | null)[]) {
+  // Ventana de fechas por etapa (índice = orden)
+  const starts: (string | null)[] = [];
+  const ends: (string | null)[] = [];
+  for (let i = 0; i < template.length; i++) {
+    const start = fechas?.[i] || null;
     let end: string | null = null;
     if (start) {
       let nextStart: string | null = null;
-      for (let k = si + 1; k < DEFAULT_PLAN.length; k++) {
+      for (let k = i + 1; k < template.length; k++) {
         if (fechas?.[k]) {
           nextStart = fechas[k]!;
           break;
@@ -38,26 +40,46 @@ async function seedPlan(supabase: DB, projectId: string, fechas?: (string | null
       }
       end = nextStart && dayDiff(start, nextStart) > 0 ? nextStart : addDays(start, 7);
     }
+    starts.push(start);
+    ends.push(end);
+  }
 
+  // Pass 1: etapas
+  const stageIdByKey = new Map<string, string>();
+  for (let i = 0; i < template.length; i++) {
+    const st = template[i];
     const { data: stage } = await supabase
       .from("project_stages")
-      .insert({ project_id: projectId, nombre: st.nombre, orden: si, depends_on_stage_id: stageDep, fecha_inicio: start, fecha_fin: end })
+      .insert({ project_id: projectId, nombre: st.nombre, orden: i, fecha_inicio: starts[i], fecha_fin: ends[i] })
       .select("id")
       .single();
-    if (!stage) continue;
-    stageIdByName.set(st.nombre, stage.id);
+    if (stage) stageIdByKey.set(st.key, stage.id);
+  }
+  // Pass 2: dependencias de etapa
+  for (const st of template) {
+    if (!st.dependsOnStageKey) continue;
+    const id = stageIdByKey.get(st.key);
+    const dep = stageIdByKey.get(st.dependsOnStageKey);
+    if (id && dep) await supabase.from("project_stages").update({ depends_on_stage_id: dep }).eq("id", id);
+  }
 
-    const N = st.tasks.length;
+  // Pass 3: tareas + checklist
+  const taskIdByKey = new Map<string, string>();
+  for (let i = 0; i < template.length; i++) {
+    const st = template[i];
+    const stageId = stageIdByKey.get(st.key);
+    if (!stageId) continue;
+    const start = starts[i];
+    const end = ends[i];
+    const N = st.tasks.length || 1;
     const span = start && end ? Math.max(1, dayDiff(start, end)) : 0;
-
-    for (let ti = 0; ti < st.tasks.length; ti++) {
-      const t = st.tasks[ti];
-      const taskDep = t.dependeDe ? taskIdByTitulo.get(t.dependeDe) ?? null : null;
+    for (let j = 0; j < st.tasks.length; j++) {
+      const t = st.tasks[j];
       let tStart: string | null = null;
       let tLimite: string | null = null;
       if (start) {
-        const a = Math.floor((ti * span) / N);
-        const b = Math.floor(((ti + 1) * span) / N);
+        const a = Math.floor((j * span) / N);
+        const b = Math.floor(((j + 1) * span) / N);
         tStart = addDays(start, a);
         tLimite = addDays(start, Math.max(a, b));
       }
@@ -65,46 +87,59 @@ async function seedPlan(supabase: DB, projectId: string, fechas?: (string | null
         .from("tasks")
         .insert({
           project_id: projectId,
-          stage_id: stage.id,
+          stage_id: stageId,
           titulo: t.titulo,
           descripcion: t.descripcion ?? null,
           opcional: !!t.opcional,
           estado: t.estado ?? "pendiente",
-          orden: ti,
-          depends_on_task_id: taskDep,
+          orden: j,
           fecha_inicio: tStart,
           fecha_limite: tLimite,
         })
         .select("id")
         .single();
-      if (task) taskIdByTitulo.set(t.titulo, task.id);
-      if (task && t.checklist?.length) {
+      if (!task) continue;
+      taskIdByKey.set(t.key, task.id);
+      if (t.checklist?.length) {
         await supabase.from("task_checklist_items").insert(
           t.checklist.map((c, ci) => ({ task_id: task.id, label: c.label, tipo: c.tipo, opcional: !!c.opcional, orden: ci }))
         );
       }
     }
   }
+  // Pass 4: dependencias de tarea
+  for (const st of template) {
+    for (const t of st.tasks) {
+      if (!t.dependsOnTaskKey) continue;
+      const id = taskIdByKey.get(t.key);
+      const dep = taskIdByKey.get(t.dependsOnTaskKey);
+      if (id && dep) await supabase.from("tasks").update({ depends_on_task_id: dep }).eq("id", id);
+    }
+  }
 }
 
-// Genera el plan estándar solo si el proyecto aún no tiene etapas.
+// Genera el plan solo si el proyecto aún no tiene etapas.
 export async function generarPlan(projectId: string, fechas?: (string | null)[]) {
   const supabase = await createClient();
   const { count } = await supabase
     .from("project_stages")
     .select("id", { count: "exact", head: true })
     .eq("project_id", projectId);
-  if ((count ?? 0) === 0) await seedPlan(supabase, projectId, fechas);
+  if ((count ?? 0) === 0) {
+    const template = await getTemplate(supabase);
+    await seedPlan(supabase, projectId, template, fechas);
+  }
   revalidatePath(`/app/proyectos/${projectId}/plan`);
   revalidatePath(`/app/proyectos/${projectId}`);
 }
 
-// Borra el plan actual del proyecto y lo recrea desde la plantilla.
+// Borra el plan actual y lo recrea desde la plantilla.
 export async function regenerarPlan(projectId: string, fechas?: (string | null)[]) {
   const supabase = await createClient();
   await supabase.from("tasks").delete().eq("project_id", projectId); // cascade => checklist
   await supabase.from("project_stages").delete().eq("project_id", projectId);
-  await seedPlan(supabase, projectId, fechas);
+  const template = await getTemplate(supabase);
+  await seedPlan(supabase, projectId, template, fechas);
   revalidatePath(`/app/proyectos/${projectId}/plan`);
   revalidatePath(`/app/proyectos/${projectId}`);
 }

@@ -1,4 +1,4 @@
-import type { Task, ProjectStage, EstadoTarea } from "./types";
+import type { Task, ProjectStage, EstadoTarea, TipoChecklist } from "./types";
 
 // Plantilla estándar de un proyecto solar residencial en Chile (Net Billing / SEC).
 // Se genera con el botón "Generar plan" y luego se edita libremente por proyecto.
@@ -157,4 +157,102 @@ export function proximaAccion(tasks: Task[], stages: ProjectStage[]): Task | nul
     return (a.fecha_limite ?? "9999-12-31").localeCompare(b.fecha_limite ?? "9999-12-31");
   });
   return candidatos[0] ?? null;
+}
+
+// ============================================================
+// Plantilla EDITABLE (guardada en BD como JSON). Usa claves estables para que
+// renombrar no rompa dependencias. Las dependencias referencian por `key`.
+// ============================================================
+
+export type StoredChecklist = { label: string; tipo: TipoChecklist; opcional?: boolean };
+export type StoredTask = {
+  key: string;
+  titulo: string;
+  descripcion?: string;
+  opcional?: boolean;
+  estado?: EstadoTarea;
+  dependsOnTaskKey?: string | null;
+  checklist: StoredChecklist[];
+};
+export type StoredStage = {
+  key: string;
+  nombre: string;
+  dependsOnStageKey?: string | null;
+  tasks: StoredTask[];
+};
+
+// Convierte la plantilla por defecto (referencias por nombre/título) a la forma
+// con claves estables que usa el editor y la BD.
+export function defaultStoredTemplate(): StoredStage[] {
+  const stageKeyByName = new Map<string, string>();
+  const taskKeyByTitulo = new Map<string, string>();
+  DEFAULT_PLAN.forEach((s, i) => {
+    stageKeyByName.set(s.nombre, `e${i}`);
+    s.tasks.forEach((t, j) => taskKeyByTitulo.set(t.titulo, `e${i}t${j}`));
+  });
+  return DEFAULT_PLAN.map((s, i) => ({
+    key: `e${i}`,
+    nombre: s.nombre,
+    dependsOnStageKey: s.bloqueadaPor ? stageKeyByName.get(s.bloqueadaPor) ?? null : null,
+    tasks: s.tasks.map((t, j) => ({
+      key: `e${i}t${j}`,
+      titulo: t.titulo,
+      descripcion: t.descripcion,
+      opcional: t.opcional,
+      estado: t.estado,
+      dependsOnTaskKey: t.dependeDe ? taskKeyByTitulo.get(t.dependeDe) ?? null : null,
+      checklist: (t.checklist ?? []).map((c) => ({ label: c.label, tipo: c.tipo, opcional: c.opcional })),
+    })),
+  }));
+}
+
+// Valida la plantilla antes de guardar. Devuelve lista de errores (vacía = ok).
+export function validateTemplate(stages: StoredStage[]): string[] {
+  const errors: string[] = [];
+  if (!stages.length) errors.push("Debe haber al menos una etapa.");
+
+  const stageKeys = new Set(stages.map((s) => s.key));
+  const allTasks = stages.flatMap((s) => s.tasks);
+  const taskKeys = new Set(allTasks.map((t) => t.key));
+  const taskTitulo = new Map(allTasks.map((t) => [t.key, t.titulo || "(sin título)"]));
+
+  for (const s of stages) {
+    if (!s.nombre.trim()) errors.push("Hay una etapa sin nombre.");
+    if (s.dependsOnStageKey) {
+      if (s.dependsOnStageKey === s.key) errors.push(`La etapa "${s.nombre}" no puede depender de sí misma.`);
+      else if (!stageKeys.has(s.dependsOnStageKey)) errors.push(`La etapa "${s.nombre}" depende de una etapa que ya no existe.`);
+    }
+    for (const t of s.tasks) {
+      if (!t.titulo.trim()) errors.push(`En "${s.nombre || "una etapa"}" hay una tarea sin título.`);
+      if (t.dependsOnTaskKey) {
+        if (t.dependsOnTaskKey === t.key) errors.push(`La tarea "${t.titulo}" no puede depender de sí misma.`);
+        else if (!taskKeys.has(t.dependsOnTaskKey)) errors.push(`La tarea "${t.titulo}" depende de una tarea que ya no existe.`);
+      }
+      for (const c of t.checklist) {
+        if (!c.label.trim()) errors.push(`En "${t.titulo || "una tarea"}" hay un ítem de checklist sin texto.`);
+      }
+    }
+  }
+
+  // Ciclos de dependencia (cada nodo tiene a lo más una dependencia => seguir la cadena).
+  const stageDep = new Map(stages.map((s) => [s.key, s.dependsOnStageKey ?? null]));
+  const taskDep = new Map(allTasks.map((t) => [t.key, t.dependsOnTaskKey ?? null]));
+  const findCycle = (keys: string[], dep: Map<string, string | null>): string | null => {
+    for (const k of keys) {
+      const seen = new Set<string>([k]);
+      let cur = dep.get(k) ?? null;
+      while (cur) {
+        if (seen.has(cur)) return k;
+        seen.add(cur);
+        cur = dep.get(cur) ?? null;
+      }
+    }
+    return null;
+  };
+  const sc = findCycle([...stageKeys], stageDep);
+  if (sc) errors.push(`Hay un ciclo en las dependencias de etapas (revisa "${stages.find((s) => s.key === sc)?.nombre}").`);
+  const tc = findCycle([...taskKeys], taskDep);
+  if (tc) errors.push(`Hay un ciclo en las dependencias de tareas (revisa "${taskTitulo.get(tc)}").`);
+
+  return errors;
 }

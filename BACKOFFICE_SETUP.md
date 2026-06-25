@@ -27,6 +27,7 @@ todo en español. Login con Google restringido por whitelist de correos.
    `task_checklist_items` con su RLS).
 7. Y `supabase/migrations/0005_plan_deps.sql` (dependencias de etapa, prioridad de tareas y
    tareas sin proyecto).
+8. Y `supabase/migrations/0006_plan_template.sql` (plantilla de plan editable, tabla `plan_template`).
 
 ## 2. Activar el login con Google
 
