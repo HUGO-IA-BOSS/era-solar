@@ -60,6 +60,7 @@ export const DEFAULT_PLAN: TplStage[] = [
   },
   {
     nombre: "Trámite solicitud de conexión SEC",
+    bloqueadaPor: "Diseño & cotización", // toda la etapa espera la aprobación/firma del cliente
     tasks: [
       {
         titulo: "Reunir antecedentes del cliente para SEC",
@@ -72,7 +73,7 @@ export const DEFAULT_PLAN: TplStage[] = [
           { label: "TE1 (si lo tiene)", tipo: "documento", opcional: true },
         ],
       },
-      { titulo: "Preparar y enviar solicitud a SEC", dependeDe: "Aprobación / firma del cliente" },
+      { titulo: "Preparar y enviar solicitud a SEC" },
       {
         titulo: "Resolución SEC",
         descripcion: "Esperar respuesta. Si hay rechazo, crear tarea de subsanación y reenviar.",
@@ -83,6 +84,7 @@ export const DEFAULT_PLAN: TplStage[] = [
   },
   {
     nombre: "Compras & logística",
+    bloqueadaPor: "Trámite solicitud de conexión SEC", // espera la Resolución SEC
     tasks: [
       { titulo: "Comprar equipos (paneles, inversor, etc.)" },
       { titulo: "Coordinar fecha de instalación" },

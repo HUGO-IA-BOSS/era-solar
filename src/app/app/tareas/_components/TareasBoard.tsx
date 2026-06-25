@@ -9,7 +9,8 @@ import { EmptyState } from "../../_components/ui";
 import { createClient } from "@/lib/supabase/client";
 import { theme, inputStyle, labelStyle, btnPrimary } from "@/lib/theme";
 import { ESTADO_TAREA_MAP, PRIORIDADES, PRIORIDAD_MAP } from "@/lib/constants";
-import type { Task, Prioridad } from "@/lib/types";
+import { tareaBloqueada } from "@/lib/plan-template";
+import type { Task, Prioridad, ProjectStage } from "@/lib/types";
 
 type Mini = { id: string; nombre: string };
 type MiniUser = { id: string; full_name: string | null; email: string };
@@ -25,7 +26,7 @@ export default function TareasBoard({
 }: {
   tasks: Task[];
   projects: Mini[];
-  stages: Mini[];
+  stages: ProjectStage[];
   users: MiniUser[];
 }) {
   const supabase = createClient();
@@ -44,6 +45,9 @@ export default function TareasBoard({
   const hoy = new Date().toISOString().slice(0, 10);
   const filtered = useMemo(() => {
     const list = tasks.filter((t) => {
+      // Solo accionable: no hecha, no marcada "bloqueada", y no bloqueada por una dependencia.
+      if (t.estado === "hecha" || t.estado === "bloqueada") return false;
+      if (tareaBloqueada(t, tasks, stages)) return false;
       if (fProyecto && t.project_id !== fProyecto) return false;
       if (fResponsable === "sin" && t.responsable_id) return false;
       if (fResponsable && fResponsable !== "sin" && t.responsable_id !== fResponsable) return false;
@@ -59,7 +63,7 @@ export default function TareasBoard({
       if (pa !== pb) return pa - pb;
       return (a.fecha_limite ?? "9999-12-31").localeCompare(b.fecha_limite ?? "9999-12-31");
     });
-  }, [tasks, fProyecto, fResponsable, verTodas, blockerIds]);
+  }, [tasks, stages, fProyecto, fResponsable, verTodas, blockerIds]);
 
   async function marcarHecha(t: Task) {
     setBusy(true);
@@ -94,11 +98,10 @@ export default function TareasBoard({
         </button>
       </div>
 
-      {!verTodas && (
-        <p style={{ fontSize: 12.5, color: theme.textFaint, margin: "0 0 14px" }}>
-          Mostrando tareas <strong>bloqueantes</strong>, <strong>urgentes/altas</strong> y <strong>sin proyecto</strong>. Activa “Ver todas” para el resto.
-        </p>
-      )}
+      <p style={{ fontSize: 12.5, color: theme.textFaint, margin: "0 0 14px" }}>
+        Se ocultan las tareas <strong>bloqueadas</strong> (por una dependencia o marcadas como bloqueadas).{" "}
+        {!verTodas && "Por defecto: bloqueantes, urgentes/altas y sin proyecto — activa “Ver todas” para el resto."}
+      </p>
 
       {filtered.length === 0 ? (
         <EmptyState title="Nada por ahora" description="No hay tareas con esos criterios." />

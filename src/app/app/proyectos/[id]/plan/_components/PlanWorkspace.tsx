@@ -110,6 +110,8 @@ export default function PlanWorkspace({
   const deleteTask = (t: Task) => confirm(`¿Eliminar la tarea "${t.titulo}"?`) && run(() => supabase.from("tasks").delete().eq("id", t.id));
   const toggleItem = (it: TaskChecklistItem) => run(() => supabase.from("task_checklist_items").update({ done: !it.done }).eq("id", it.id));
   const deleteItem = (it: TaskChecklistItem) => run(() => supabase.from("task_checklist_items").delete().eq("id", it.id));
+  const commitTaskDates = (taskId: string, inicio: string, limite: string) =>
+    run(() => supabase.from("tasks").update({ fecha_inicio: inicio, fecha_limite: limite }).eq("id", taskId));
 
   async function addItem(taskId: string) {
     const label = prompt("Nuevo ítem del checklist:");
@@ -204,7 +206,7 @@ export default function PlanWorkspace({
       </div>
 
       {view === "gantt" ? (
-        <GanttView stages={stages} tasks={tasks} />
+        <GanttView stages={stages} tasks={tasks} onCommit={commitTaskDates} />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {stages.map((s) => {
