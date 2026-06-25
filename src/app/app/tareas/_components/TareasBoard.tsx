@@ -32,7 +32,6 @@ export default function TareasBoard({
   const supabase = createClient();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const [verTodas, setVerTodas] = useState(false);
   const [fProyecto, setFProyecto] = useState("");
   const [fResponsable, setFResponsable] = useState("");
   const [creating, setCreating] = useState(false);
@@ -51,10 +50,6 @@ export default function TareasBoard({
       if (fProyecto && t.project_id !== fProyecto) return false;
       if (fResponsable === "sin" && t.responsable_id) return false;
       if (fResponsable && fResponsable !== "sin" && t.responsable_id !== fResponsable) return false;
-      if (!verTodas) {
-        const destacada = blockerIds.has(t.id) || t.prioridad === "alta" || t.prioridad === "urgente" || !t.project_id;
-        if (!destacada) return false;
-      }
       return true;
     });
     return list.sort((a, b) => {
@@ -63,7 +58,7 @@ export default function TareasBoard({
       if (pa !== pb) return pa - pb;
       return (a.fecha_limite ?? "9999-12-31").localeCompare(b.fecha_limite ?? "9999-12-31");
     });
-  }, [tasks, stages, fProyecto, fResponsable, verTodas, blockerIds]);
+  }, [tasks, stages, fProyecto, fResponsable]);
 
   async function marcarHecha(t: Task) {
     setBusy(true);
@@ -89,9 +84,6 @@ export default function TareasBoard({
               <option key={u.id} value={u.id} style={{ background: theme.surfaceSolid }}>{u.full_name || u.email}</option>
             ))}
           </select>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, color: theme.textMuted, cursor: "pointer" }}>
-            <input type="checkbox" checked={verTodas} onChange={(e) => setVerTodas(e.target.checked)} /> Ver todas
-          </label>
         </div>
         <button onClick={() => setCreating(true)} className="es-btn" style={{ ...btnPrimary, display: "inline-flex", alignItems: "center", gap: 8 }}>
           <Plus size={18} /> Nueva tarea
@@ -99,8 +91,8 @@ export default function TareasBoard({
       </div>
 
       <p style={{ fontSize: 12.5, color: theme.textFaint, margin: "0 0 14px" }}>
-        Se ocultan las tareas <strong>bloqueadas</strong> (por una dependencia o marcadas como bloqueadas).{" "}
-        {!verTodas && "Por defecto: bloqueantes, urgentes/altas y sin proyecto — activa “Ver todas” para el resto."}
+        Se muestran todas las tareas <strong>accionables</strong> (ordenadas por prioridad). Se ocultan las hechas y las
+        bloqueadas — por una dependencia o marcadas como bloqueadas.
       </p>
 
       {filtered.length === 0 ? (
