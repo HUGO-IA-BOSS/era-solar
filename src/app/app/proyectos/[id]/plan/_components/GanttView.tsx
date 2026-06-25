@@ -152,9 +152,35 @@ export default function GanttView({
     arrows.push({ x1: pf.x1, y1: rf * ROW_H + ROW_H / 2, x2: pt.x0, y2: rt * ROW_H + ROW_H / 2 });
   }
 
+  // arrows de dependencia de ETAPA: última tarea de la etapa prerequisito -> primera de la dependiente
+  const stageArrows: { x1: number; y1: number; x2: number; y2: number }[] = [];
+  for (const s of stagesSorted) {
+    if (!s.depends_on_stage_id) continue;
+    const pre = (byStage.get(s.depends_on_stage_id) ?? [])
+      .map((t) => ({ p: posOf(t), r: rowIndexOfTask.get(t.id) }))
+      .filter((x) => x.p && x.r != null);
+    const mine = (byStage.get(s.id) ?? [])
+      .map((t) => ({ p: posOf(t), r: rowIndexOfTask.get(t.id) }))
+      .filter((x) => x.p && x.r != null);
+    if (!pre.length || !mine.length) continue;
+    const from = pre.reduce((a, b) => (b.p!.x1 > a.p!.x1 ? b : a));
+    const to = mine.reduce((a, b) => (b.p!.x0 < a.p!.x0 ? b : a));
+    stageArrows.push({ x1: from.p!.x1, y1: from.r! * ROW_H + ROW_H / 2, x2: to.p!.x0, y2: to.r! * ROW_H + ROW_H / 2 });
+  }
+
   return (
-    <div style={{ border: `1px solid ${theme.border}`, borderRadius: 14, overflowX: "auto", background: theme.bgElev }}>
-      <div style={{ display: "flex", minWidth: LABEL_W + width }}>
+    <div>
+      <div style={{ display: "flex", gap: 16, fontSize: 11.5, color: theme.textFaint, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 18, borderTop: `1.5px solid ${theme.textFaint}` }} /> dependencia de tarea
+        </span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 18, borderTop: `1.5px dashed ${theme.accent}` }} /> dependencia de etapa
+        </span>
+        <span>· arrastra una barra para mover, estira los bordes para alargar</span>
+      </div>
+      <div style={{ border: `1px solid ${theme.border}`, borderRadius: 14, overflowX: "auto", background: theme.bgElev }}>
+        <div style={{ display: "flex", minWidth: LABEL_W + width }}>
         {/* Columna de etiquetas (sticky) */}
         <div style={{ width: LABEL_W, flexShrink: 0, position: "sticky", left: 0, zIndex: 3, background: theme.bgElev, borderRight: `1px solid ${theme.border}` }}>
           <div style={{ height: HEADER_H, borderBottom: `1px solid ${theme.border}` }} />
@@ -205,6 +231,9 @@ export default function GanttView({
                 <marker id="gantt-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
                   <path d="M0,0 L7,3.5 L0,7 Z" fill={theme.textFaint} />
                 </marker>
+                <marker id="gantt-arrow-stage" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                  <path d="M0,0 L7,3.5 L0,7 Z" fill={theme.accent} />
+                </marker>
               </defs>
               {arrows.map((a, i) => {
                 const midX = Math.max(a.x1 + 10, a.x2 - 10);
@@ -216,6 +245,21 @@ export default function GanttView({
                     stroke={theme.textFaint}
                     strokeWidth={1.4}
                     markerEnd="url(#gantt-arrow)"
+                  />
+                );
+              })}
+              {stageArrows.map((a, i) => {
+                const midX = Math.max(a.x1 + 10, a.x2 - 10);
+                return (
+                  <path
+                    key={"st" + i}
+                    d={`M ${a.x1} ${a.y1} H ${midX} V ${a.y2} H ${a.x2}`}
+                    fill="none"
+                    stroke={theme.accent}
+                    strokeWidth={1.5}
+                    strokeDasharray="5 4"
+                    opacity={0.85}
+                    markerEnd="url(#gantt-arrow-stage)"
                   />
                 );
               })}
@@ -273,6 +317,7 @@ export default function GanttView({
             })}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
