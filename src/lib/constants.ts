@@ -1,4 +1,4 @@
-import type { EstadoProyecto, TipoAdjunto, Role, MedioPago } from "./types";
+import type { EstadoProyecto, TipoAdjunto, Role, MedioPago, EstadoTarea, EstadoEtapa } from "./types";
 
 export const IVA = 0.19;
 
@@ -85,3 +85,24 @@ export const MEDIO_PAGO_OPTIONS: { value: MedioPago; label: string }[] = [
 export const MEDIO_PAGO_LABEL: Record<MedioPago, string> = Object.fromEntries(
   MEDIO_PAGO_OPTIONS.map((m) => [m.value, m.label])
 ) as Record<MedioPago, string>;
+
+// --- Planificación ---
+
+export const ESTADO_TAREA: { value: EstadoTarea; label: string; color: string }[] = [
+  { value: "pendiente", label: "Pendiente", color: "#a1a1aa" },
+  { value: "en_progreso", label: "En curso", color: "#3b82f6" },
+  { value: "hecha", label: "Hecha", color: "#22c55e" },
+  { value: "bloqueada", label: "Bloqueada", color: "#ef4444" },
+];
+export const ESTADO_TAREA_MAP: Record<EstadoTarea, { label: string; color: string }> = Object.fromEntries(
+  ESTADO_TAREA.map((e) => [e.value, { label: e.label, color: e.color }])
+) as Record<EstadoTarea, { label: string; color: string }>;
+
+export const ESTADO_ETAPA: { value: EstadoEtapa; label: string; color: string }[] = [
+  { value: "pendiente", label: "Pendiente", color: "#a1a1aa" },
+  { value: "en_progreso", label: "En curso", color: "#f59e0b" },
+  { value: "completada", label: "Completada", color: "#22c55e" },
+];
+export const ESTADO_ETAPA_MAP: Record<EstadoEtapa, { label: string; color: string }> = Object.fromEntries(
+  ESTADO_ETAPA.map((e) => [e.value, { label: e.label, color: e.color }])
+) as Record<EstadoEtapa, { label: string; color: string }>;

@@ -165,6 +165,56 @@ export interface SaleAllocation {
   created_at: string;
 }
 
+// --- Planificación ---
+
+export type EstadoEtapa = "pendiente" | "en_progreso" | "completada";
+export type EstadoTarea = "pendiente" | "en_progreso" | "hecha" | "bloqueada";
+export type TipoChecklist = "check" | "foto" | "documento";
+
+export interface ProjectStage {
+  id: string;
+  project_id: string;
+  nombre: string;
+  orden: number;
+  estado: EstadoEtapa;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Task {
+  id: string;
+  project_id: string;
+  stage_id: string | null;
+  titulo: string;
+  descripcion: string | null;
+  estado: EstadoTarea;
+  responsable_id: string | null;
+  fecha_inicio: string | null;
+  fecha_limite: string | null;
+  orden: number;
+  opcional: boolean;
+  bloqueo_motivo: string | null;
+  depends_on_task_id: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaskChecklistItem {
+  id: string;
+  task_id: string;
+  label: string;
+  tipo: TipoChecklist;
+  done: boolean;
+  opcional: boolean;
+  storage_path: string | null;
+  nombre_archivo: string | null;
+  orden: number;
+  created_at: string;
+}
+
 export interface Purchase {
   id: string;
   fecha_compra: string | null;

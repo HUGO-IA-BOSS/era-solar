@@ -23,6 +23,8 @@ todo en español. Login con Google restringido por whitelist de correos.
    tablas `sociedades` y `purchases` con su RLS + una sociedad inicial editable).
 5. Y por último `supabase/migrations/0003_ventas.sql` (Ventas + Cuotas: tablas `cuotas`,
    `sales` y `sale_allocations` con su RLS).
+6. Y `supabase/migrations/0004_planificacion.sql` (Planificación: `project_stages`, `tasks`,
+   `task_checklist_items` con su RLS).
 
 ## 2. Activar el login con Google
 

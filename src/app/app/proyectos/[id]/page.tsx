@@ -1,16 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ListChecks, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, Card, SectionTitle, Field, EstadoBadge } from "../../_components/ui";
 import { formatCLP, IVA } from "@/lib/constants";
-import { theme } from "@/lib/theme";
-import type { Project, Design, Attachment, Cuota, SaleAllocation } from "@/lib/types";
+import { theme, btnPrimary } from "@/lib/theme";
+import { proximaAccion } from "@/lib/plan-template";
+import type { Project, Design, Attachment, Cuota, SaleAllocation, ProjectStage, Task } from "@/lib/types";
 import EstadoSelector from "./_components/EstadoSelector";
 import DesignsSection from "./_components/DesignsSection";
 import AttachmentsManager from "./_components/AttachmentsManager";
 import ProjectHeaderActions from "./_components/ProjectHeaderActions";
 import CuotasSection from "./_components/CuotasSection";
+import { generarPlan } from "./plan/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +31,14 @@ export default async function ProyectoDetallePage({ params }: { params: Promise<
       supabase.from("profiles").select("id, full_name, email").neq("role", "pendiente").order("full_name"),
       supabase.from("sociedades").select("id").limit(1),
     ]);
+
+  const [{ data: stagesData }, { data: tasksData }] = await Promise.all([
+    supabase.from("project_stages").select("*").eq("project_id", id).order("orden"),
+    supabase.from("tasks").select("*").eq("project_id", id).order("orden"),
+  ]);
+  const stages = (stagesData ?? []) as ProjectStage[];
+  const tasks = (tasksData ?? []) as Task[];
+  const proxima = proximaAccion(tasks, stages);
 
   const designs = (designsData ?? []) as Design[];
   const attachments = (attachmentsData ?? []) as Attachment[];
@@ -83,6 +93,63 @@ export default async function ProyectoDetallePage({ params }: { params: Promise<
             {project.descripcion && (
               <div style={{ marginTop: 18, paddingTop: 18, borderTop: `1px solid ${theme.border}` }}>
                 <Field label="Descripción" value={<span style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{project.descripcion}</span>} />
+              </div>
+            )}
+          </Card>
+
+          {/* Plan del proyecto */}
+          <Card>
+            <SectionTitle
+              right={
+                stages.length > 0 ? (
+                  <Link href={`/app/proyectos/${id}/plan`} style={{ color: theme.accent, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
+                    Abrir plan →
+                  </Link>
+                ) : undefined
+              }
+            >
+              Plan del proyecto
+            </SectionTitle>
+            {stages.length === 0 ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                <span style={{ color: theme.textMuted, fontSize: 14 }}>Aún no hay plan.</span>
+                <form action={generarPlan.bind(null, id)}>
+                  <button type="submit" className="es-btn" style={{ ...btnPrimary, display: "inline-flex", alignItems: "center", gap: 8 }}>
+                    <Sparkles size={16} /> Generar plan estándar
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, background: theme.accentSoft, border: "1px solid rgba(245,158,11,0.35)", borderRadius: 10, padding: "10px 14px" }}>
+                  <ListChecks size={16} color={theme.accent} />
+                  {proxima ? (
+                    <span style={{ fontSize: 14 }}>
+                      <span style={{ color: theme.textMuted }}>Próxima acción: </span>
+                      <strong>{proxima.titulo}</strong>
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: 14, color: theme.ok }}>✓ Sin tareas pendientes</span>
+                  )}
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8 }}>
+                  {stages.map((s) => {
+                    const req = tasks.filter((t) => t.stage_id === s.id && !t.opcional);
+                    const done = req.filter((t) => t.estado === "hecha").length;
+                    const pct = req.length ? (done / req.length) * 100 : 0;
+                    return (
+                      <div key={s.id} style={{ border: `1px solid ${theme.border}`, borderRadius: 10, padding: "9px 11px" }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.nombre}</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 6 }}>
+                          <div style={{ flex: 1, height: 5, borderRadius: 999, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
+                            <div style={{ width: `${pct}%`, height: "100%", background: pct === 100 ? theme.ok : theme.accent }} />
+                          </div>
+                          <span style={{ fontSize: 11, color: theme.textFaint }}>{done}/{req.length}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </Card>

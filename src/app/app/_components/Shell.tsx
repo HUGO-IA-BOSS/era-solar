@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   FolderKanban,
+  ListChecks,
   Users,
   Receipt,
   Banknote,
@@ -33,6 +34,7 @@ const SECTIONS: { title?: string; items: NavItem[] }[] = [
     items: [
       { href: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
       { href: "/app/proyectos", label: "Proyectos", icon: FolderKanban },
+      { href: "/app/tareas", label: "Tareas", icon: ListChecks },
     ],
   },
   {
