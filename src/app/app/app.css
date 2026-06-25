@@ -18,8 +18,8 @@
 }
 
 .es-navlink:hover {
-  background: rgba(255, 255, 255, 0.07) !important;
-  color: #f4f4f5 !important;
+  background: rgba(0, 0, 0, 0.05) !important;
+  color: #15181d !important;
 }
 
 .es-card-link {
@@ -27,8 +27,8 @@
 }
 .es-card-link:hover {
   transform: translateY(-2px);
-  border-color: rgba(245, 158, 11, 0.4) !important;
-  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(245, 158, 11, 0.5) !important;
+  background: rgba(0, 0, 0, 0.02) !important;
 }
 
 .es-app input:focus,
@@ -42,16 +42,16 @@
   filter: brightness(1.06);
 }
 .es-row:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(0, 0, 0, 0.03);
 }
 
-/* Scrollbar oscura */
+/* Scrollbar */
 .es-app ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 .es-app ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.18);
   border-radius: 8px;
 }
 .es-app ::-webkit-scrollbar-track {

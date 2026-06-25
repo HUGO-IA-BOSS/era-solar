@@ -58,7 +58,7 @@ export default function ProjectsToolbar() {
           placeholder="Buscar por nombre, dirección o cliente…"
           style={{
             width: "100%",
-            background: "rgba(0,0,0,0.25)",
+            background: "#ffffff",
             border: `1px solid ${theme.border}`,
             borderRadius: 10,
             padding: "10px 12px 10px 38px",

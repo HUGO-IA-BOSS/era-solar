@@ -138,7 +138,7 @@ export default async function ProyectoDetallePage({ params }: { params: Promise<
                       <div key={s.id} style={{ border: `1px solid ${theme.border}`, borderRadius: 10, padding: "9px 11px" }}>
                         <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.nombre}</div>
                         <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 6 }}>
-                          <div style={{ flex: 1, height: 5, borderRadius: 999, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
+                          <div style={{ flex: 1, height: 5, borderRadius: 999, background: "rgba(0,0,0,0.08)", overflow: "hidden" }}>
                             <div style={{ width: `${pct}%`, height: "100%", background: pct === 100 ? theme.ok : theme.accent }} />
                           </div>
                           <span style={{ fontSize: 11, color: theme.textFaint }}>{done}/{req.length}</span>

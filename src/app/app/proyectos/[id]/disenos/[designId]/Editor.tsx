@@ -1035,7 +1035,7 @@ const optGroup: React.CSSProperties = { display: "flex", alignItems: "center", g
 const optLabel: React.CSSProperties = { fontSize: 12.5, color: theme.textMuted, fontWeight: 600 };
 const numInput: React.CSSProperties = {
   width: 64,
-  background: "rgba(0,0,0,0.25)",
+  background: "#ffffff",
   border: `1px solid ${theme.border}`,
   borderRadius: 8,
   padding: "6px 8px",

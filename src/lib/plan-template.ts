@@ -77,7 +77,6 @@ export const DEFAULT_PLAN: TplStage[] = [
       {
         titulo: "Resolución SEC",
         descripcion: "Esperar respuesta. Si hay rechazo, crear tarea de subsanación y reenviar.",
-        estado: "bloqueada",
         dependeDe: "Preparar y enviar solicitud a SEC",
       },
     ],

@@ -224,7 +224,7 @@ export default function PlanWorkspace({
                     <div style={{ fontWeight: 700, fontSize: 15 }}>{s.nombre}</div>
                     <div style={{ fontSize: 12, color: theme.textFaint }}>{done}/{req.length} tareas</div>
                   </div>
-                  <div style={{ width: 80, height: 6, borderRadius: 999, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
+                  <div style={{ width: 80, height: 6, borderRadius: 999, background: "rgba(0,0,0,0.08)", overflow: "hidden" }}>
                     <div style={{ width: `${req.length ? (done / req.length) * 100 : 0}%`, height: "100%", background: theme.ok }} />
                   </div>
                   <button onClick={() => setEditor({ mode: "new", stageId: s.id })} title="Agregar tarea" style={iconBtn}><Plus size={15} /></button>
@@ -370,7 +370,7 @@ function TaskRow({
             <ListChecks size={15} /> {itemsDone}/{items.length}
           </button>
         )}
-        <select value={task.estado} onChange={(e) => onEstado(e.target.value as EstadoTarea)} style={{ background: "rgba(0,0,0,0.25)", border: `1px solid ${theme.border}`, borderRadius: 8, color: est.color, fontSize: 12.5, fontWeight: 600, padding: "5px 8px", cursor: "pointer" }}>
+        <select value={task.estado} onChange={(e) => onEstado(e.target.value as EstadoTarea)} style={{ background: "#ffffff", border: `1px solid ${theme.border}`, borderRadius: 8, color: est.color, fontSize: 12.5, fontWeight: 600, padding: "5px 8px", cursor: "pointer" }}>
           {ESTADO_TAREA.map((s) => (
             <option key={s.value} value={s.value} style={{ background: theme.surfaceSolid, color: theme.text }}>{s.label}</option>
           ))}

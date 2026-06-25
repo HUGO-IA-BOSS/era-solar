@@ -171,10 +171,6 @@ export default function PlantillaEditor({ initial }: { initial: StoredStage[] })
                           <option key={o.key} value={o.key} style={{ background: theme.surfaceSolid }}>{o.label}</option>
                         ))}
                       </select>
-                      <select value={t.estado ?? "pendiente"} onChange={(e) => setTask(s.key, t.key, { estado: e.target.value === "bloqueada" ? "bloqueada" : undefined })} style={{ ...inputStyle, width: "auto", appearance: "auto" }} title="Estado inicial">
-                        <option value="pendiente" style={{ background: theme.surfaceSolid }}>Normal</option>
-                        <option value="bloqueada" style={{ background: theme.surfaceSolid }}>Inicia bloqueada</option>
-                      </select>
                       <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: theme.textMuted, cursor: "pointer" }}>
                         <input type="checkbox" checked={!!t.opcional} onChange={(e) => setTask(s.key, t.key, { opcional: e.target.checked })} /> opc.
                       </label>

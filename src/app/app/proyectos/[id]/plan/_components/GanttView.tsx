@@ -186,7 +186,7 @@ export default function GanttView({
           <div style={{ height: HEADER_H, borderBottom: `1px solid ${theme.border}` }} />
           {rows.map((r, i) =>
             r.kind === "stage" ? (
-              <div key={"s" + r.stage.id} style={{ height: ROW_H, display: "flex", alignItems: "center", padding: "0 12px", fontSize: 12.5, fontWeight: 700, background: "rgba(255,255,255,0.03)", borderBottom: `1px solid ${theme.border}` }}>
+              <div key={"s" + r.stage.id} style={{ height: ROW_H, display: "flex", alignItems: "center", padding: "0 12px", fontSize: 12.5, fontWeight: 700, background: "rgba(0,0,0,0.04)", borderBottom: `1px solid ${theme.border}` }}>
                 {r.stage.nombre}
               </div>
             ) : (
@@ -212,7 +212,7 @@ export default function GanttView({
           <div style={{ position: "relative", height: bodyH }}>
             {/* gridlines semanales */}
             {ticks.map((d) => (
-              <div key={d} style={{ position: "absolute", left: (d - minDay) * PX, top: 0, height: bodyH, width: 1, background: "rgba(255,255,255,0.06)" }} />
+              <div key={d} style={{ position: "absolute", left: (d - minDay) * PX, top: 0, height: bodyH, width: 1, background: "rgba(0,0,0,0.08)" }} />
             ))}
             {/* hoy */}
             {todayDay >= minDay && todayDay <= maxDay && (
@@ -221,7 +221,7 @@ export default function GanttView({
             {/* bandas de etapa */}
             {rows.map((r, i) =>
               r.kind === "stage" ? (
-                <div key={"sb" + r.stage.id} style={{ position: "absolute", top: i * ROW_H, left: 0, width, height: ROW_H, background: "rgba(255,255,255,0.03)", borderBottom: `1px solid ${theme.border}` }} />
+                <div key={"sb" + r.stage.id} style={{ position: "absolute", top: i * ROW_H, left: 0, width, height: ROW_H, background: "rgba(0,0,0,0.04)", borderBottom: `1px solid ${theme.border}` }} />
               ) : null
             )}
 

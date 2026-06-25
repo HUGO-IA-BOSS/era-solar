@@ -63,7 +63,7 @@ export default function LoginPage() {
           backdropFilter: "blur(16px)",
           padding: "40px 34px",
           textAlign: "center",
-          boxShadow: "0 30px 80px rgba(0,0,0,0.5)",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.1)",
         }}
       >
         <div
@@ -115,7 +115,7 @@ export default function LoginPage() {
             gap: 12,
             background: "#fff",
             color: "#1f1f1f",
-            border: "none",
+            border: `1px solid ${theme.border}`,
             borderRadius: 12,
             padding: "14px 18px",
             fontSize: 15,
