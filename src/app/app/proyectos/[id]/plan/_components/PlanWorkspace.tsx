@@ -29,6 +29,7 @@ import { generarPlan, regenerarPlan } from "../actions";
 import { EmptyState } from "../../../../_components/ui";
 import TaskEditor from "./TaskEditor";
 import GanttView from "./GanttView";
+import GenerarPlanModal from "./GenerarPlanModal";
 
 type MiniUser = { id: string; full_name: string | null; email: string };
 type Editor = { mode: "new"; stageId: string | null } | { mode: "edit"; task: Task } | null;
@@ -59,6 +60,7 @@ export default function PlanWorkspace({
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [openChecklist, setOpenChecklist] = useState<Set<string>>(new Set());
   const [editor, setEditor] = useState<Editor>(null);
+  const [planModal, setPlanModal] = useState<"generar" | "regenerar" | null>(null);
 
   const userMap = useMemo(() => new Map(users.map((u) => [u.id, u.full_name || u.email])), [users]);
   const bloqueoLabel = (t: Task) => {
@@ -147,21 +149,35 @@ export default function PlanWorkspace({
   const orphan = tasksByStage.get("__none__") ?? [];
   const working = busy || pending;
 
+  const confirmPlan = (fechas: string[]) =>
+    start(async () => {
+      if (planModal === "generar") await generarPlan(projectId, fechas);
+      else if (planModal === "regenerar") await regenerarPlan(projectId, fechas);
+      setPlanModal(null);
+      router.refresh();
+    });
+  const planModalEl = planModal ? (
+    <GenerarPlanModal mode={planModal} working={working} onClose={() => setPlanModal(null)} onConfirm={confirmPlan} />
+  ) : null;
+
   // ---- Estado vacío ----
   if (stages.length === 0 && tasks.length === 0) {
     return (
-      <EmptyState
-        title="Este proyecto aún no tiene plan"
-        description="Genera el plan estándar (visita, diseño, SEC, compras, instalación, cierre) y luego edítalo, o crea etapas a mano."
-        action={
-          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={() => start(async () => { await generarPlan(projectId); router.refresh(); })} disabled={working} className="es-btn" style={{ ...btnPrimary, display: "inline-flex", alignItems: "center", gap: 8 }}>
-              <Sparkles size={16} /> {working ? "Generando…" : "Generar plan estándar"}
-            </button>
-            <button onClick={addStage} disabled={working} style={btnGhost}>Agregar etapa manual</button>
-          </div>
-        }
-      />
+      <>
+        <EmptyState
+          title="Este proyecto aún no tiene plan"
+          description="Genera el plan estándar (visita, diseño, SEC, compras, instalación, cierre) y luego edítalo, o crea etapas a mano."
+          action={
+            <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+              <button onClick={() => setPlanModal("generar")} disabled={working} className="es-btn" style={{ ...btnPrimary, display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <Sparkles size={16} /> Generar plan estándar
+              </button>
+              <button onClick={addStage} disabled={working} style={btnGhost}>Agregar etapa manual</button>
+            </div>
+          }
+        />
+        {planModalEl}
+      </>
     );
   }
 
@@ -179,18 +195,7 @@ export default function PlanWorkspace({
           <div style={{ fontSize: 13.5, color: theme.ok }}>✓ Sin tareas pendientes</div>
         )}
         <div style={{ display: "flex", gap: 8 }}>
-          <button
-            onClick={() => {
-              if (confirm("¿Regenerar el plan? Se borra el plan actual (etapas, tareas y checklist) y se recrea desde la plantilla.")) {
-                start(async () => {
-                  await regenerarPlan(projectId);
-                  router.refresh();
-                });
-              }
-            }}
-            style={viewBtn(false)}
-            title="Borrar y recrear desde la plantilla"
-          >
+          <button onClick={() => setPlanModal("regenerar")} style={viewBtn(false)} title="Borrar y recrear desde la plantilla">
             <RotateCcw size={15} /> Regenerar
           </button>
           <button onClick={() => setView("lista")} style={viewBtn(view === "lista")}><List size={15} /> Lista</button>
@@ -301,6 +306,8 @@ export default function PlanWorkspace({
           onCancel={() => setEditor(null)}
         />
       )}
+
+      {planModalEl}
     </div>
   );
 }

@@ -12,7 +12,6 @@ import DesignsSection from "./_components/DesignsSection";
 import AttachmentsManager from "./_components/AttachmentsManager";
 import ProjectHeaderActions from "./_components/ProjectHeaderActions";
 import CuotasSection from "./_components/CuotasSection";
-import { generarPlan } from "./plan/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -113,11 +112,9 @@ export default async function ProyectoDetallePage({ params }: { params: Promise<
             {stages.length === 0 ? (
               <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
                 <span style={{ color: theme.textMuted, fontSize: 14 }}>Aún no hay plan.</span>
-                <form action={generarPlan.bind(null, id)}>
-                  <button type="submit" className="es-btn" style={{ ...btnPrimary, display: "inline-flex", alignItems: "center", gap: 8 }}>
-                    <Sparkles size={16} /> Generar plan estándar
-                  </button>
-                </form>
+                <Link href={`/app/proyectos/${id}/plan`} className="es-btn" style={{ ...btnPrimary, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  <Sparkles size={16} /> Crear plan
+                </Link>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
