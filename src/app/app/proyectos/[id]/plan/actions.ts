@@ -18,7 +18,7 @@ function dayDiff(a: string, b: string): number {
 // Inserta etapas/tareas/checklist desde la plantilla, resolviendo dependencias
 // (bloqueadaPor / dependeDe) y, si llegan fechas de inicio por etapa, inventa
 // las fechas de etapas y tareas para poblar el Gantt.
-async function seedPlan(supabase: DB, projectId: string, fechas?: (string | null)[]) {
+async function seedPlan(supabase: DB, projectId: string, fechas?: (string | null)[]): Promise<string | null> {
   const stageIdByName = new Map<string, string>();
   const taskIdByTitulo = new Map<string, string>();
 
@@ -39,11 +39,12 @@ async function seedPlan(supabase: DB, projectId: string, fechas?: (string | null
       end = nextStart && dayDiff(start, nextStart) > 0 ? nextStart : addDays(start, 7);
     }
 
-    const { data: stage } = await supabase
+    const { data: stage, error: stageErr } = await supabase
       .from("project_stages")
       .insert({ project_id: projectId, nombre: st.nombre, orden: si, depends_on_stage_id: stageDep, fecha_inicio: start, fecha_fin: end })
       .select("id")
       .single();
+    if (stageErr) return `Etapas: ${stageErr.message}`;
     if (!stage) continue;
     stageIdByName.set(st.nombre, stage.id);
 
@@ -61,7 +62,7 @@ async function seedPlan(supabase: DB, projectId: string, fechas?: (string | null
         tStart = addDays(start, a);
         tLimite = addDays(start, Math.max(a, b));
       }
-      const { data: task } = await supabase
+      const { data: task, error: taskErr } = await supabase
         .from("tasks")
         .insert({
           project_id: projectId,
@@ -77,34 +78,45 @@ async function seedPlan(supabase: DB, projectId: string, fechas?: (string | null
         })
         .select("id")
         .single();
+      if (taskErr) return `Tareas: ${taskErr.message}`;
       if (task) taskIdByTitulo.set(t.titulo, task.id);
       if (task && t.checklist?.length) {
-        await supabase.from("task_checklist_items").insert(
+        const { error: clErr } = await supabase.from("task_checklist_items").insert(
           t.checklist.map((c, ci) => ({ task_id: task.id, label: c.label, tipo: c.tipo, opcional: !!c.opcional, orden: ci }))
         );
+        if (clErr) return `Checklist: ${clErr.message}`;
       }
     }
   }
+  return null;
 }
 
 // Genera el plan estándar solo si el proyecto aún no tiene etapas.
-export async function generarPlan(projectId: string, fechas?: (string | null)[]) {
+export async function generarPlan(projectId: string, fechas?: (string | null)[]): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { count } = await supabase
     .from("project_stages")
     .select("id", { count: "exact", head: true })
     .eq("project_id", projectId);
-  if ((count ?? 0) === 0) await seedPlan(supabase, projectId, fechas);
+  if ((count ?? 0) === 0) {
+    const err = await seedPlan(supabase, projectId, fechas);
+    if (err) return { error: err };
+  }
   revalidatePath(`/app/proyectos/${projectId}/plan`);
   revalidatePath(`/app/proyectos/${projectId}`);
+  return {};
 }
 
 // Borra el plan actual del proyecto y lo recrea desde la plantilla.
-export async function regenerarPlan(projectId: string, fechas?: (string | null)[]) {
+export async function regenerarPlan(projectId: string, fechas?: (string | null)[]): Promise<{ error?: string }> {
   const supabase = await createClient();
-  await supabase.from("tasks").delete().eq("project_id", projectId); // cascade => checklist
-  await supabase.from("project_stages").delete().eq("project_id", projectId);
-  await seedPlan(supabase, projectId, fechas);
+  const { error: delTasks } = await supabase.from("tasks").delete().eq("project_id", projectId); // cascade => checklist
+  if (delTasks) return { error: `Borrando tareas: ${delTasks.message}` };
+  const { error: delStages } = await supabase.from("project_stages").delete().eq("project_id", projectId);
+  if (delStages) return { error: `Borrando etapas: ${delStages.message}` };
+  const err = await seedPlan(supabase, projectId, fechas);
+  if (err) return { error: err };
   revalidatePath(`/app/proyectos/${projectId}/plan`);
   revalidatePath(`/app/proyectos/${projectId}`);
+  return {};
 }
