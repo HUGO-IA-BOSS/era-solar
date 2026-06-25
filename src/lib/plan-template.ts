@@ -1,7 +1,9 @@
-import type { Task, EstadoTarea } from "./types";
+import type { Task, ProjectStage, EstadoTarea } from "./types";
 
 // Plantilla estándar de un proyecto solar residencial en Chile (Net Billing / SEC).
 // Se genera con el botón "Generar plan" y luego se edita libremente por proyecto.
+// `bloqueadaPor` = nombre de la etapa que debe completarse antes (dependencia de etapa).
+// `dependeDe` = título de la tarea que debe estar hecha antes (dependencia de tarea).
 
 export type TplChecklist = { label: string; tipo: "check" | "foto" | "documento"; opcional?: boolean };
 export type TplTask = {
@@ -9,9 +11,10 @@ export type TplTask = {
   descripcion?: string;
   opcional?: boolean;
   estado?: EstadoTarea;
+  dependeDe?: string;
   checklist?: TplChecklist[];
 };
-export type TplStage = { nombre: string; tasks: TplTask[] };
+export type TplStage = { nombre: string; bloqueadaPor?: string; tasks: TplTask[] };
 
 export const DEFAULT_PLAN: TplStage[] = [
   {
@@ -20,7 +23,7 @@ export const DEFAULT_PLAN: TplStage[] = [
       { titulo: "Agendar visita con el cliente" },
       {
         titulo: "Levantamiento en terreno",
-        descripcion: "Tomar las fotos clave de la instalación.",
+        descripcion: "Tomar las fotos clave y las medidas de la instalación.",
         checklist: [
           { label: "Foto del techo", tipo: "foto" },
           { label: "Foto: dónde irá el inversor", tipo: "foto" },
@@ -29,28 +32,34 @@ export const DEFAULT_PLAN: TplStage[] = [
           { label: "Foto del tablero general", tipo: "foto" },
           { label: "Foto de la fachada de la casa", tipo: "foto" },
           { label: "Medidas del techo", tipo: "foto" },
+          { label: "Medir una referencia y espacios importantes", tipo: "check" },
         ],
       },
       {
         titulo: "Reunir antecedentes iniciales",
-        checklist: [{ label: "Boleta de luz reciente", tipo: "documento" }],
+        checklist: [
+          { label: "Boleta de luz reciente", tipo: "documento" },
+          { label: "Planos de la casa", tipo: "documento" },
+        ],
       },
     ],
   },
   {
     nombre: "Diseño & cotización",
+    bloqueadaPor: "Visita técnica",
     tasks: [
       { titulo: "Diseño de layout de paneles" },
-      { titulo: "Dimensionar generación" },
-      { titulo: "Enviar cotización al cliente" },
+      { titulo: "Dimensionar generación", dependeDe: "Diseño de layout de paneles" },
+      { titulo: "Enviar cotización al cliente", dependeDe: "Dimensionar generación" },
       {
         titulo: "Aprobación / firma del cliente",
+        dependeDe: "Enviar cotización al cliente",
         checklist: [{ label: "Cotización firmada", tipo: "documento" }],
       },
     ],
   },
   {
-    nombre: "Trámite solicitud de conexión SEC (Net Billing)",
+    nombre: "Trámite solicitud de conexión SEC",
     tasks: [
       {
         titulo: "Reunir antecedentes del cliente para SEC",
@@ -60,15 +69,15 @@ export const DEFAULT_PLAN: TplStage[] = [
           { label: "Foto carnet — frente", tipo: "foto" },
           { label: "Foto carnet — reverso", tipo: "foto" },
           { label: "Verificar que el cliente es titular de la cuenta de luz", tipo: "check" },
-          { label: "Planos de la casa", tipo: "documento", opcional: true },
           { label: "TE1 (si lo tiene)", tipo: "documento", opcional: true },
         ],
       },
-      { titulo: "Preparar y enviar solicitud a SEC" },
+      { titulo: "Preparar y enviar solicitud a SEC", dependeDe: "Aprobación / firma del cliente" },
       {
         titulo: "Resolución SEC",
         descripcion: "Esperar respuesta. Si hay rechazo, crear tarea de subsanación y reenviar.",
         estado: "bloqueada",
+        dependeDe: "Preparar y enviar solicitud a SEC",
       },
     ],
   },
@@ -81,37 +90,62 @@ export const DEFAULT_PLAN: TplStage[] = [
   },
   {
     nombre: "Instalación",
+    bloqueadaPor: "Compras & logística",
     tasks: [
-      { titulo: "Montaje de estructura y paneles" },
-      { titulo: "Instalación de inversor y tableros" },
-      { titulo: "Conexión a empalme" },
+      { titulo: "Montaje estructura" },
+      { titulo: "Montaje paneles" },
+      { titulo: "Montaje inversor" },
+      { titulo: "Canalización DC" },
+      { titulo: "Canalización AC y Tablero FV" },
+      { titulo: "Señalética" },
+      { titulo: "Puesta en marcha sin inyección" },
     ],
   },
   {
-    nombre: "Puesta en marcha & cierre",
+    nombre: "Netbilling",
+    bloqueadaPor: "Instalación",
     tasks: [
-      { titulo: "Pruebas / energización" },
-      { titulo: "Inspección" },
-      { titulo: "Entrega y capacitación al cliente" },
-      { titulo: "Activación Net Billing" },
+      { titulo: "Trámite TE4" },
+      { titulo: "Contrato firmado" },
+      { titulo: "Solicitar cambio de medidor" },
     ],
-  },
-  {
-    nombre: "Post-venta",
-    tasks: [{ titulo: "Mantención programada", opcional: true }],
   },
 ];
 
-// La próxima tarea que destraba el proyecto: pendiente/en curso, no opcional, con su
-// dependencia satisfecha, ordenada por (etapa → orden → fecha límite).
-export function proximaAccion(tasks: Task[], stages: { id: string; orden: number }[]): Task | null {
+// ¿Está completa una etapa? (todas sus tareas no opcionales hechas)
+export function stageCompleta(stageId: string | null, tasks: Task[]): boolean {
+  if (!stageId) return true;
+  const req = tasks.filter((t) => t.stage_id === stageId && !t.opcional);
+  return req.every((t) => t.estado === "hecha");
+}
+
+// ¿Está bloqueada una tarea? Por su etapa prerequisito o por la tarea de la que depende.
+export function tareaBloqueada(
+  t: Task,
+  tasks: Task[],
+  stages: ProjectStage[]
+): { tipo: "etapa" | "tarea"; label: string } | null {
+  const stage = stages.find((s) => s.id === t.stage_id);
+  if (stage?.depends_on_stage_id && !stageCompleta(stage.depends_on_stage_id, tasks)) {
+    const pre = stages.find((s) => s.id === stage.depends_on_stage_id);
+    return { tipo: "etapa", label: pre?.nombre ?? "etapa previa" };
+  }
+  if (t.depends_on_task_id) {
+    const dep = tasks.find((x) => x.id === t.depends_on_task_id);
+    if (dep && dep.estado !== "hecha") return { tipo: "tarea", label: dep.titulo };
+  }
+  return null;
+}
+
+// La próxima tarea que destraba el proyecto: pendiente/en curso, no opcional, no bloqueada,
+// ordenada por (etapa → orden → fecha límite).
+export function proximaAccion(tasks: Task[], stages: ProjectStage[]): Task | null {
   const stageOrden = new Map(stages.map((s) => [s.id, s.orden]));
-  const doneIds = new Set(tasks.filter((t) => t.estado === "hecha").map((t) => t.id));
   const candidatos = tasks.filter(
     (t) =>
       (t.estado === "pendiente" || t.estado === "en_progreso") &&
       !t.opcional &&
-      (!t.depends_on_task_id || doneIds.has(t.depends_on_task_id))
+      !tareaBloqueada(t, tasks, stages)
   );
   candidatos.sort((a, b) => {
     const sa = stageOrden.get(a.stage_id ?? "") ?? 999;

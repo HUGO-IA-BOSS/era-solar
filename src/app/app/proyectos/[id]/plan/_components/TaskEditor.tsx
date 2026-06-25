@@ -5,8 +5,8 @@ import { Trash2, Plus } from "lucide-react";
 import Modal from "../../../../_components/Modal";
 import { createClient } from "@/lib/supabase/client";
 import { theme, inputStyle, labelStyle, btnPrimary } from "@/lib/theme";
-import { ESTADO_TAREA } from "@/lib/constants";
-import type { ProjectStage, Task, EstadoTarea, TipoChecklist } from "@/lib/types";
+import { ESTADO_TAREA, PRIORIDADES } from "@/lib/constants";
+import type { ProjectStage, Task, EstadoTarea, TipoChecklist, Prioridad } from "@/lib/types";
 
 type MiniUser = { id: string; full_name: string | null; email: string };
 type DraftItem = { label: string; tipo: TipoChecklist; opcional: boolean };
@@ -39,6 +39,7 @@ export default function TaskEditor({
   const [stageId, setStageId] = useState(initial?.stage_id ?? defaultStageId ?? "");
   const [responsableId, setResponsableId] = useState(initial?.responsable_id ?? "");
   const [estado, setEstado] = useState<EstadoTarea>(initial?.estado ?? "pendiente");
+  const [prioridad, setPrioridad] = useState<Prioridad>(initial?.prioridad ?? "normal");
   const [opcional, setOpcional] = useState(initial?.opcional ?? false);
   const [fechaInicio, setFechaInicio] = useState(initial?.fecha_inicio ?? "");
   const [fechaLimite, setFechaLimite] = useState(initial?.fecha_limite ?? "");
@@ -60,6 +61,7 @@ export default function TaskEditor({
         descripcion: descripcion.trim() || null,
         responsable_id: responsableId || null,
         estado,
+        prioridad,
         opcional,
         fecha_inicio: fechaInicio || null,
         fecha_limite: fechaLimite || null,
@@ -119,6 +121,14 @@ export default function TaskEditor({
           <select value={estado} onChange={(e) => setEstado(e.target.value as EstadoTarea)} style={{ ...inputStyle, appearance: "auto" }}>
             {ESTADO_TAREA.map((s) => (
               <option key={s.value} value={s.value} style={{ background: theme.surfaceSolid }}>{s.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label style={labelStyle}>Prioridad</label>
+          <select value={prioridad} onChange={(e) => setPrioridad(e.target.value as Prioridad)} style={{ ...inputStyle, appearance: "auto" }}>
+            {PRIORIDADES.map((p) => (
+              <option key={p.value} value={p.value} style={{ background: theme.surfaceSolid }}>{p.label}</option>
             ))}
           </select>
         </div>

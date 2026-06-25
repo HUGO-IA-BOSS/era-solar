@@ -170,6 +170,7 @@ export interface SaleAllocation {
 export type EstadoEtapa = "pendiente" | "en_progreso" | "completada";
 export type EstadoTarea = "pendiente" | "en_progreso" | "hecha" | "bloqueada";
 export type TipoChecklist = "check" | "foto" | "documento";
+export type Prioridad = "baja" | "normal" | "alta" | "urgente";
 
 export interface ProjectStage {
   id: string;
@@ -177,6 +178,7 @@ export interface ProjectStage {
   nombre: string;
   orden: number;
   estado: EstadoEtapa;
+  depends_on_stage_id: string | null;
   fecha_inicio: string | null;
   fecha_fin: string | null;
   created_at: string;
@@ -185,11 +187,12 @@ export interface ProjectStage {
 
 export interface Task {
   id: string;
-  project_id: string;
+  project_id: string | null; // null = tarea general (sin proyecto)
   stage_id: string | null;
   titulo: string;
   descripcion: string | null;
   estado: EstadoTarea;
+  prioridad: Prioridad;
   responsable_id: string | null;
   fecha_inicio: string | null;
   fecha_limite: string | null;

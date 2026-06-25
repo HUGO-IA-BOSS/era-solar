@@ -12,6 +12,7 @@ import {
   GanttChartSquare,
   List,
   Lock,
+  RotateCcw,
   Camera,
   FileText,
   CheckSquare,
@@ -22,9 +23,9 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { theme, btnPrimary, btnGhost } from "@/lib/theme";
 import { ESTADO_TAREA, ESTADO_TAREA_MAP, STORAGE_ATTACHMENTS } from "@/lib/constants";
-import { proximaAccion } from "@/lib/plan-template";
+import { proximaAccion, tareaBloqueada } from "@/lib/plan-template";
 import type { ProjectStage, Task, TaskChecklistItem, EstadoTarea, TipoChecklist } from "@/lib/types";
-import { generarPlan } from "../actions";
+import { generarPlan, regenerarPlan } from "../actions";
 import { EmptyState } from "../../../../_components/ui";
 import TaskEditor from "./TaskEditor";
 import GanttView from "./GanttView";
@@ -60,8 +61,10 @@ export default function PlanWorkspace({
   const [editor, setEditor] = useState<Editor>(null);
 
   const userMap = useMemo(() => new Map(users.map((u) => [u.id, u.full_name || u.email])), [users]);
-  const tituloMap = useMemo(() => new Map(tasks.map((t) => [t.id, t.titulo])), [tasks]);
-  const doneIds = useMemo(() => new Set(tasks.filter((t) => t.estado === "hecha").map((t) => t.id)), [tasks]);
+  const bloqueoLabel = (t: Task) => {
+    const b = tareaBloqueada(t, tasks, stages);
+    return b ? (b.tipo === "etapa" ? `etapa: ${b.label}` : b.label) : null;
+  };
   const tasksByStage = useMemo(() => {
     const m = new Map<string, Task[]>();
     for (const t of tasks) {
@@ -176,6 +179,20 @@ export default function PlanWorkspace({
           <div style={{ fontSize: 13.5, color: theme.ok }}>✓ Sin tareas pendientes</div>
         )}
         <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => {
+              if (confirm("¿Regenerar el plan? Se borra el plan actual (etapas, tareas y checklist) y se recrea desde la plantilla.")) {
+                start(async () => {
+                  await regenerarPlan(projectId);
+                  router.refresh();
+                });
+              }
+            }}
+            style={viewBtn(false)}
+            title="Borrar y recrear desde la plantilla"
+          >
+            <RotateCcw size={15} /> Regenerar
+          </button>
           <button onClick={() => setView("lista")} style={viewBtn(view === "lista")}><List size={15} /> Lista</button>
           <button onClick={() => setView("gantt")} style={viewBtn(view === "gantt")}><GanttChartSquare size={15} /> Gantt</button>
         </div>
@@ -220,7 +237,7 @@ export default function PlanWorkspace({
                           open={openChecklist.has(t.id)}
                           onToggleOpen={() => setOpenChecklist((p) => toggle(p, t.id))}
                           responsable={t.responsable_id ? userMap.get(t.responsable_id) ?? null : null}
-                          dependsTitulo={t.depends_on_task_id && !doneIds.has(t.depends_on_task_id) ? tituloMap.get(t.depends_on_task_id) ?? null : null}
+                          dependsTitulo={bloqueoLabel(t)}
                           onEstado={(e) => setTaskEstado(t, e)}
                           onEdit={() => setEditor({ mode: "edit", task: t })}
                           onDelete={() => deleteTask(t)}
@@ -249,7 +266,7 @@ export default function PlanWorkspace({
                   open={openChecklist.has(t.id)}
                   onToggleOpen={() => setOpenChecklist((p) => toggle(p, t.id))}
                   responsable={t.responsable_id ? userMap.get(t.responsable_id) ?? null : null}
-                  dependsTitulo={t.depends_on_task_id && !doneIds.has(t.depends_on_task_id) ? tituloMap.get(t.depends_on_task_id) ?? null : null}
+                  dependsTitulo={bloqueoLabel(t)}
                   onEstado={(e) => setTaskEstado(t, e)}
                   onEdit={() => setEditor({ mode: "edit", task: t })}
                   onDelete={() => deleteTask(t)}

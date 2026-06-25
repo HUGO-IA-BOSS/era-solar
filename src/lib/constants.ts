@@ -1,4 +1,4 @@
-import type { EstadoProyecto, TipoAdjunto, Role, MedioPago, EstadoTarea, EstadoEtapa } from "./types";
+import type { EstadoProyecto, TipoAdjunto, Role, MedioPago, EstadoTarea, EstadoEtapa, Prioridad } from "./types";
 
 export const IVA = 0.19;
 
@@ -106,3 +106,13 @@ export const ESTADO_ETAPA: { value: EstadoEtapa; label: string; color: string }[
 export const ESTADO_ETAPA_MAP: Record<EstadoEtapa, { label: string; color: string }> = Object.fromEntries(
   ESTADO_ETAPA.map((e) => [e.value, { label: e.label, color: e.color }])
 ) as Record<EstadoEtapa, { label: string; color: string }>;
+
+export const PRIORIDADES: { value: Prioridad; label: string; color: string; orden: number }[] = [
+  { value: "urgente", label: "Urgente", color: "#ef4444", orden: 0 },
+  { value: "alta", label: "Alta", color: "#f59e0b", orden: 1 },
+  { value: "normal", label: "Normal", color: "#a1a1aa", orden: 2 },
+  { value: "baja", label: "Baja", color: "#6b7280", orden: 3 },
+];
+export const PRIORIDAD_MAP: Record<Prioridad, { label: string; color: string; orden: number }> = Object.fromEntries(
+  PRIORIDADES.map((p) => [p.value, { label: p.label, color: p.color, orden: p.orden }])
+) as Record<Prioridad, { label: string; color: string; orden: number }>;
